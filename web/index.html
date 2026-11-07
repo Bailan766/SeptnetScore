@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>七天学堂 · 查分与排名分析终端 (v4.6.4 API)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-hover: #26354d;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 960px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+    .badge.green {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .badge.gold {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--warn);
+      border-color: rgba(251, 191, 36, 0.35);
+    }
+    .form-group { margin-bottom: 10px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b1120;
+      color: var(--text);
+      font-size: 13px;
+    }
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary-dark);
+      color: #fff;
+      flex: 1;
+    }
+    .btn-primary:hover { background: var(--primary); color: #0f172a; }
+    .btn-secondary {
+      background: #334155;
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .exam-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .exam-item:hover, .exam-item.active {
+      background: var(--panel-hover);
+      border-color: var(--primary);
+    }
+    .exam-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .exam-meta { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+    .top-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 768px) {
+      .top-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat-box {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-val { font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .stat-sub { font-size: 12px; color: var(--accent); margin-top: 2px; }
+    .subject-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .subject-tab {
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .subject-tab:hover {
+      border-color: var(--primary);
+      color: var(--text);
+    }
+    .subject-tab.active {
+      background: var(--primary-dark);
+      color: #fff;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; background: #0b1120; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .bar-label { width: 95px; color: var(--muted); }
+    .bar-track {
+      flex: 1;
+      height: 18px;
+      background: #0b1120;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+      border-radius: 999px;
+    }
+    .bar-fill.self {
+      background: linear-gradient(90deg, #059669, var(--accent));
+    }
+    .bar-count { width: 130px; text-align: right; font-size: 12px; color: var(--muted); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .status-banner {
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+      margin-top: 10px;
+    }
+    .ai-box {
+      background: rgba(52, 211, 153, 0.08);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #e2e8f0;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 左侧栏：登录与考试列表 -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>七天学堂 · 账号与登录</span>
+          <span id="modeBadge" class="badge">实连模式</span>
+        </div>
+        <div class="form-group">
+          <label>登录方式</label>
+          <select id="loginType" onchange="toggleLoginFields()">
+            <option value="password" selected>账号密码登录 (POST /login)</option>
+            <option value="sms">短信验证码登录 (POST /login/entry)</option>
+            <option value="token">已有 Token 直接注入</option>
+          </select>
+        </div>
+        <div id="userCodeGroup" class="form-group">
+          <label>手机号 / 七天号 (userCode)</label>
+          <input id="userCode" type="text" placeholder="输入 11 位手机号 / 七天号" value="" />
+        </div>
+        <div id="passwordGroup" class="form-group" style="display:block;">
+          <label>登录密码 (password)</label>
+          <input id="password" type="password" placeholder="输入七天学堂登录密码" value="" />
+        </div>
+        <div id="smsGroup" style="display:none;">
+          <div class="form-group">
+            <label>图形验证码 (VerifyImage，选填)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="graphicCode" type="text" placeholder="选填图形码" style="flex:1;" />
+              <img id="captchaImg" src="/api/sms/captcha?userCode=13800000000" alt="点击刷新" title="点击刷新图形验证码"
+                   onclick="refreshCaptcha()"
+                   style="height:35px; width:108px; border-radius:8px; border:1px solid var(--border); cursor:pointer; background:#0b1120;" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>短信验证码 (verifyCode)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="verifyCode" type="text" placeholder="输入 6 位验证码" style="flex:1;" />
+              <button type="button" id="sendSmsBtn" class="btn-secondary"
+                      onclick="doSendSms()" style="white-space:nowrap; padding:8px 12px;">
+                获取验证码
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>短信会话令牌 (vcodetoken)</label>
+            <input id="smsToken" type="text" placeholder="自动回填" />
+          </div>
+        </div>
+        <div id="tokenGroup" class="form-group" style="display:none;">
+          <label>Header Token</label>
+          <input id="tokenInput" type="text" placeholder="粘贴 Token" />
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="doLogin()">一键重新登录同步</button>
+          <button class="btn-secondary" onclick="loadDemo()">演示数据</button>
+        </div>
+        <div id="statusBox" class="status-banner">
+          正在从网关拉取当前学生考试数据...
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>当前绑定学生档案</span>
+          <span class="badge gold" id="vipTag">非VIP · 已自动折算年级排名</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.9;">
+          <div>姓名：<strong style="color:var(--text)" id="uName">-</strong></div>
+          <div>学校：<strong style="color:var(--text)" id="uSchool">-</strong></div>
+          <div>年级：<strong style="color:var(--text)" id="uGrade">-</strong></div>
+          <div>账号：<strong style="color:var(--text)" id="uCode">-</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>考试列表 (已认领考试)</span>
+          <span class="badge" id="examCountBadge">0 场</span>
+        </div>
+        <div id="examListContainer"></div>
+      </div>
+    </div>
+
+    <!-- 右侧主面板：成绩单、排名位置、分数段、小题明细 -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span id="currentExamTitle">考试成绩与排名总览</span>
+          <span class="badge" id="currentExamTime">-</span>
+        </div>
+
+        <div id="aiBox" class="ai-box" style="display:none;">
+          <strong>🎯 学情诊断与整体表现：</strong>
+          <span id="aiContent"></span>
+        </div>
+
+        <div class="subject-tabs" id="subjectTabs"></div>
+
+        <div class="top-summary">
+          <div class="stat-box">
+            <div class="stat-label" id="scoreLabel">总分成绩 / 满分</div>
+            <div class="stat-val" id="myScoreVal">-</div>
+            <div class="stat-sub" id="kgZgSub">赋分后真实成绩</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">学校年级折算排名</div>
+            <div class="stat-val" id="gradeRankVal" style="color:var(--accent);">-</div>
+            <div class="stat-sub" id="gradeTotalSub">年级总考生: -</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">全校年级相对位置</div>
+            <div class="stat-val" id="levelVal">-</div>
+            <div class="stat-sub" id="sortDescSub">百分位: -</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">赋分等级</div>
+            <div class="stat-val" id="ratingVal" style="color:var(--primary);">-</div>
+            <div class="stat-sub">本校常规统考</div>
+          </div>
+        </div>
+
+        <div class="card-title" style="margin-top: 8px;">
+          <span>各科成绩单与名次对比 (包含赋分转换与折算排名)</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>科目 (km)</th>
+                <th>我的成绩</th>
+                <th>原始卷面分</th>
+                <th>满分</th>
+                <th>学校年级排名</th>
+                <th>年级百分位</th>
+                <th>赋分等级</th>
+              </tr>
+            </thead>
+            <tbody id="subjectTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>年级分数段位置分布 (基于考生总数与正态分布折算)</span>
+            <span class="badge">高亮为本人所在区间</span>
+          </div>
+          <div id="positionBars"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>历次已认领考试成绩记录</span>
+            <span class="badge">累计考试</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>考试名称</th>
+                <th>发布时间</th>
+                <th>总分得分</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="trendTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span id="thTitle">单科小题全校作答选项分布 (Question/SubjectTHDistri)</span>
+          <span class="badge">点击上方科目卡片切换</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>题号 (th)</th>
+                <th>题型</th>
+                <th>全校主要选顶</th>
+                <th>得分率 / 占比</th>
+                <th>个人作答状态</th>
+              </tr>
+            </thead>
+            <tbody id="thTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let STATE = {
+      mode: "live",
+      exams: [],
+      bundle: null,
+      selectedKm: "总分"
+    };
+
+    let SMS_TIMER = null;
+
+    function toggleLoginFields() {
+      const t = document.getElementById("loginType").value;
+      document.getElementById("userCodeGroup").style.display = t === "token" ? "none" : "block";
+      document.getElementById("passwordGroup").style.display = t === "password" ? "block" : "none";
+      document.getElementById("smsGroup").style.display = t === "sms" ? "block" : "none";
+      document.getElementById("tokenGroup").style.display = t === "token" ? "block" : "none";
+      if (t === "sms") {
+        refreshCaptcha();
+      }
+    }
+
+    function refreshCaptcha() {
+      const userCode = (document.getElementById("userCode").value || "13800000000").trim();
+      const img = document.getElementById("captchaImg");
+      if (img) {
+        img.src = `/api/sms/captcha?userCode=${encodeURIComponent(userCode)}&t=${Date.now()}`;
+      }
+    }
+
+    async function doSendSms() {
+      const userCode = (document.getElementById("userCode").value || "").trim();
+      const graphicCode = (document.getElementById("graphicCode").value || "").trim();
+      if (!/^1[0-9]{10}$/.test(userCode)) {
+        document.getElementById("statusBox").textContent = "请输入正确的 11 位手机号码";
+        return;
+      }
+
+      const btn = document.getElementById("sendSmsBtn");
+      btn.disabled = true;
+      btn.textContent = "发送中...";
+      document.getElementById("statusBox").textContent = "正在请求网关发送验证码...";
+
+      try {
+        const res = await fetch("/api/sms/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userCode, graphicCode })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          if (data.smsToken) {
+            document.getElementById("smsToken").value = data.smsToken;
+          }
+          document.getElementById("statusBox").textContent = data.message;
+        } else {
+          document.getElementById("statusBox").textContent = data.message || "发送失败";
+        }
+      } catch (err) {
+        document.getElementById("statusBox").textContent = "发送异常: " + err.message;
+      }
+      btn.disabled = false;
+      btn.textContent = "重新获取";
+    }
+
+    async function initState() {
+      try {
+        const res = await fetch("/api/state");
+        const data = await res.json();
+        if (data.ok && data.bundle) {
+          STATE.mode = data.mode || "live";
+          STATE.exams = data.exams || [];
+          STATE.bundle = data.bundle;
+          STATE.selectedKm = "总分";
+          if (data.token) {
+            document.getElementById("tokenInput").value = data.token;
+          }
+          if (STATE.mode === "live") {
+            document.getElementById("modeBadge").textContent = "实连模式";
+            document.getElementById("modeBadge").className = "badge";
+            document.getElementById("statusBox").textContent =
+              `已成功连接七天学堂（学生: ${data.bundle.user.studentName} · ${data.bundle.user.schoolName}，共获取到 ${STATE.exams.length} 场真实考试）。`;
+          }
+          renderAll();
+        }
+      } catch (e) {
+        document.getElementById("statusBox").textContent = "拉取数据失败: " + e.message;
+      }
+    }
+
+    async function loadDemo(examGuid = "") {
+      await fetch("/api/mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "demo" })
+      });
+      const url = examGuid ? `/api/demo/bundle?examGuid=${encodeURIComponent(examGuid)}` : "/api/demo/bundle";
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.ok && data.bundle) {
+        STATE.mode = "demo";
+        STATE.exams = data.exams || [];
+        STATE.bundle = data.bundle;
+        STATE.selectedKm = "总分";
+        document.getElementById("modeBadge").textContent = "演示模式";
+        document.getElementById("modeBadge").className = "badge green";
+        document.getElementById("statusBox").textContent = "已切换至本地演示数据。";
+        renderAll();
+      }
+    }
+
+    async function selectExam(examGuid) {
+      if (!examGuid) return;
+      const endpoint = STATE.mode === "live" ? "/api/live/bundle" : "/api/demo/bundle";
+      document.getElementById("statusBox").textContent = `正在加载考试成绩与各科排名...`;
+      const res = await fetch(`${endpoint}?examGuid=${encodeURIComponent(examGuid)}`);
+      const data = await res.json();
+      if (data.ok && data.bundle) {
+        STATE.exams = data.exams || STATE.exams;
+        STATE.bundle = data.bundle;
+        STATE.selectedKm = "总分";
+        document.getElementById("statusBox").textContent = "考试成绩与折算排名加载完成。";
+        renderAll();
+      }
+    }
+
+    async function doLogin() {
+      const loginType = document.getElementById("loginType").value;
+      const userCode = document.getElementById("userCode").value;
+      const password = document.getElementById("password").value;
+      const verifyCode = document.getElementById("verifyCode").value;
+      const smsToken = document.getElementById("smsToken").value;
+      const token = document.getElementById("tokenInput").value;
+
+      document.getElementById("statusBox").textContent = "正在通过 https://szone-my.7net.cc 登录认证并协商密钥...";
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ loginType, userCode, password, verifyCode, smsToken, token })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          document.getElementById("statusBox").textContent = "登录失败: " + data.message;
+          return;
+        }
+        STATE.mode = "live";
+        STATE.exams = data.exams || [];
+        if (data.token) {
+          document.getElementById("tokenInput").value = data.token;
+        }
+        document.getElementById("modeBadge").textContent = "实连模式";
+        document.getElementById("modeBadge").className = "badge";
+        document.getElementById("statusBox").textContent =
+          `网关认证成功！学生: ${data.bundle.user.studentName} (${data.bundle.user.schoolName})，已同步 ${STATE.exams.length} 场考试。`;
+        if (data.bundle) {
+          STATE.bundle = data.bundle;
+          STATE.selectedKm = "总分";
+          renderAll();
+        }
+      } catch (err) {
+        document.getElementById("statusBox").textContent = "连接异常: " + err.message;
+      }
+    }
+
+    function selectSubject(km) {
+      STATE.selectedKm = km;
+      renderAll();
+    }
+
+    function renderAll() {
+      const b = STATE.bundle;
+      if (!b) return;
+
+      // 1. 学生档案
+      document.getElementById("uName").textContent = b.user.studentName || "-";
+      document.getElementById("uSchool").textContent = b.user.schoolName || "-";
+      document.getElementById("uGrade").textContent = b.user.currentGrade || "-";
+      document.getElementById("uCode").textContent = b.user.userCode || "-";
+      document.getElementById("vipTag").textContent = b.user.isVip ? "VIP 用户" : "非VIP (已自动解锁年级排名)";
+
+      // 2. 考试列表
+      document.getElementById("examCountBadge").textContent = `${STATE.exams.length} 场`;
+      const examContainer = document.getElementById("examListContainer");
+      if (!STATE.exams.length) {
+        examContainer.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">当前账号暂无已认领考试记录</div>`;
+      } else {
+        examContainer.innerHTML = STATE.exams.map(ex => `
+          <div class="exam-item ${ex.examGuid === b.exam.examGuid ? 'active' : ''}"
+               onclick="selectExam('${ex.examGuid}')">
+            <div class="exam-name">${ex.examName}</div>
+            <div class="exam-meta">
+              <span>${ex.examType || '统考'} · 得分 ${ex.totalScore}</span>
+              <span>${ex.queryTime}</span>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      // 3. 当前考试标题与诊断
+      document.getElementById("currentExamTitle").textContent = b.exam.examName;
+      document.getElementById("currentExamTime").textContent = `时间: ${b.exam.queryTime}`;
+
+      const aiBox = document.getElementById("aiBox");
+      if (b.aiConclusion) {
+        aiBox.style.display = "block";
+        document.getElementById("aiContent").innerHTML = b.aiConclusion;
+      } else {
+        aiBox.style.display = "none";
+      }
+
+      // 4. 科目切换标签
+      const tabsEl = document.getElementById("subjectTabs");
+      tabsEl.innerHTML = b.subjects.map(s => `
+        <div class="subject-tab ${s.km === STATE.selectedKm ? 'active' : ''}"
+             onclick="selectSubject('${s.km}')">
+          ${s.km} (${s.myScore}分)
+        </div>
+      `).join("");
+
+      const cur = b.subjects.find(s => s.km === STATE.selectedKm) || b.subjects[0];
+
+      // 5. 顶部四格指标卡
+      document.getElementById("scoreLabel").textContent = `${cur.km}得分 / 满分`;
+      const rawText = (cur.isFu && cur.rawScore && cur.rawScore !== cur.myScore)
+        ? ` <span style="font-size:13px;color:var(--warn);font-weight:normal;">(原始 ${cur.rawScore})</span>`
+        : "";
+      document.getElementById("myScoreVal").innerHTML = `${cur.myScore} / ${cur.fullScore}${rawText}`;
+      document.getElementById("kgZgSub").textContent = cur.isFu ? "高考赋分换算后成绩" : "卷面原始得分";
+
+      document.getElementById("gradeRankVal").textContent = cur.gradeRank !== "-" ? `第 ${cur.gradeRank} 名` : "-";
+      document.getElementById("gradeTotalSub").textContent = `全校年级考生: ${cur.gradeTotal || '-'} 人`;
+
+      document.getElementById("levelVal").textContent = cur.sortDesc || "-";
+      document.getElementById("sortDescSub").textContent = `年级排名百分位: ${cur.sortDesc}`;
+
+      document.getElementById("ratingVal").textContent = `等级 ${cur.level}`;
+
+      // 6. 各科成绩对比表格
+      const tbody = document.getElementById("subjectTableBody");
+      tbody.innerHTML = b.subjects.map(s => {
+        const isCurrent = s.km === STATE.selectedKm;
+        const rawNote = (s.isFu && s.rawScore && s.rawScore !== s.myScore)
+          ? `<span style="color:var(--warn)">${s.rawScore} (赋分转 ${s.myScore})</span>`
+          : `${s.rawScore || s.myScore}`;
+        const rankText = s.gradeRank !== "-"
+          ? `<strong style="color:var(--accent);">第 ${s.gradeRank} / ${s.gradeTotal} 名</strong>`
+          : "-";
+
+        return `
+          <tr style="${isCurrent ? 'background:rgba(56,189,248,0.1);font-weight:600;' : ''}"
+              onclick="selectSubject('${s.km}')" style="cursor:pointer;">
+            <td><strong>${s.km}</strong></td>
+            <td style="color:var(--primary);font-size:14px;font-weight:bold;">${s.myScore}</td>
+            <td>${rawNote}</td>
+            <td>${s.fullScore}</td>
+            <td>${rankText}</td>
+            <td><span class="badge">${s.sortDesc}</span></td>
+            <td><span class="badge ${s.level.startsWith('A') ? 'green' : (s.level.startsWith('B') ? 'gold' : '')}">${s.level}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      // 7. 分数段分布条形图
+      const buckets = b.positionBuckets || [];
+      const posEl = document.getElementById("positionBars");
+      if (!buckets.length) {
+        posEl.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0;">暂无该场考试分数段数据</div>`;
+      } else {
+        const maxCount = Math.max(...buckets.map(x => x.count), 1);
+        posEl.innerHTML = buckets.map(item => {
+          const widthPct = Math.max(6, Math.round((item.count / maxCount) * 100));
+          return `
+            <div class="bar-row">
+              <div class="bar-label">${item.range}分</div>
+              <div class="bar-track">
+                <div class="bar-fill ${item.self ? 'self' : ''}" style="width:${widthPct}%"></div>
+              </div>
+              <div class="bar-count">
+                ${item.count}人 (${item.percent}) ${item.self ? '<strong style="color:var(--accent)">★本人区间</strong>' : ''}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // 8. 历次考试记录表格
+      const trendBody = document.getElementById("trendTableBody");
+      trendBody.innerHTML = STATE.exams.map(ex => `
+        <tr style="${ex.examGuid === b.exam.examGuid ? 'background:rgba(56,189,248,0.08);font-weight:600;' : ''}"
+            onclick="selectExam('${ex.examGuid}')" style="cursor:pointer;">
+          <td>${ex.examName}</td>
+          <td>${ex.queryTime}</td>
+          <td style="color:var(--primary)"><strong>${ex.totalScore}</strong></td>
+          <td><span class="badge green">已认领</span></td>
+        </tr>
+      `).join("");
+
+      // 9. 小题作答分布
+      document.getElementById("thTitle").textContent = `${cur.km} · 小题全校作答选项分布 (Question/SubjectTHDistri)`;
+      const thBody = document.getElementById("thTableBody");
+      const ths = cur.ths || [];
+      if (!ths.length) {
+        thBody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:14px;">点击上方“语文 / 数学 / 英语 / 历史 / 地理”等单科标签，查看全校学生小题作答选项及正确率分布</td></tr>`;
+      } else {
+        thBody.innerHTML = ths.map(t => `
+          <tr>
+            <td><strong>第 ${t.th} 题</strong></td>
+            <td>${t.type}</td>
+            <td style="color:var(--accent)"><strong>${t.stdAns}</strong></td>
+            <td><span class="badge">${t.rate}</span></td>
+            <td>${t.myAns}</td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => initState());
+  </script>
+</body>
+</html>
