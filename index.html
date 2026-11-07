@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SeptnetScore · 七天学堂在线查分与年级排名分析</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <script src="js/jsencrypt.min.js"></script>
+  <script src="js/crypto-js.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-hover: #26354d;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+    }
+    .header-bar {
+      max-width: 1360px;
+      margin: 0 auto 16px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      margin-left: 14px;
+      transition: color 0.15s;
+    }
+    .header-links a:hover { color: #fff; text-decoration: underline; }
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 920px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+    .badge.green {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .badge.gold {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--warn);
+      border-color: rgba(251, 191, 36, 0.35);
+    }
+    .form-group { margin-bottom: 10px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b1120;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary-dark);
+      color: #fff;
+      flex: 1;
+    }
+    .btn-primary:active, .btn-primary:hover { background: var(--primary); color: #0f172a; }
+    .btn-secondary {
+      background: #334155;
+      color: var(--text);
+    }
+    .btn-secondary:active, .btn-secondary:hover { background: #475569; }
+    .exam-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .exam-item:hover, .exam-item.active {
+      background: var(--panel-hover);
+      border-color: var(--primary);
+    }
+    .exam-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .exam-meta { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+    .top-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 680px) {
+      .top-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat-box {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-val { font-size: 22px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .stat-sub { font-size: 11px; color: var(--accent); margin-top: 2px; }
+    .subject-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .subject-tab {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .subject-tab:hover, .subject-tab.active {
+      background: var(--primary-dark);
+      color: #fff;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; background: #0b1120; }
+    tr:hover td { background: rgba(255, 255, 255, 0.03); }
+    .status-banner {
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .ai-box {
+      background: rgba(52, 211, 153, 0.08);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #e2e8f0;
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="header-title">
+      <span>📊 SeptnetScore</span>
+      <span class="badge green">纯前端浏览器直连</span>
+    </div>
+    <div class="header-links">
+      <a href="https://github.com/Bailan766/SeptnetScore" target="_blank">⭐ GitHub 源码</a>
+      <a href="https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0" target="_blank">📱 下载 Android APK</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- 左侧栏：登录与考试列表 -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>七天学堂 · 账号登录</span>
+          <span id="modeBadge" class="badge">未登录</span>
+        </div>
+        <div class="form-group">
+          <label>手机号 / 七天号 (userCode)</label>
+          <input id="userCode" type="text" placeholder="输入 11 位手机号" />
+        </div>
+        <div class="form-group">
+          <label>登录密码 (password)</label>
+          <input id="password" type="password" placeholder="输入密码" />
+        </div>
+        <div class="btn-row">
+          <button id="loginBtn" class="btn-primary" onclick="handleLogin()">一键登录查分</button>
+          <button class="btn-secondary" onclick="handleLogout()">清除退出</button>
+        </div>
+        <div id="statusBox" class="status-banner">
+          浏览器通过官方 CORS 网关直连 szone-*.7net.cc，所有加解密均在浏览器本地执行，账号凭据绝不上报第三方服务器。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>学生档案</span>
+          <span class="badge gold" id="vipTag">非VIP · 已自动解锁年级排名</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.9;">
+          <div>姓名：<strong style="color:var(--text)" id="uName">-</strong></div>
+          <div>学校：<strong style="color:var(--text)" id="uSchool">-</strong></div>
+          <div>年级：<strong style="color:var(--text)" id="uGrade">-</strong></div>
+          <div>账号：<strong style="color:var(--text)" id="uCode">-</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>已认领考试列表</span>
+          <span class="badge" id="examCountBadge">0 场</span>
+        </div>
+        <div id="examListContainer">
+          <div style="color:var(--muted);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧主面板：成绩单、排名位置、各科对比 -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span id="currentExamTitle">考试成绩与排名总览</span>
+          <span class="badge" id="currentExamTime">-</span>
+        </div>
+
+        <div id="aiBox" class="ai-box" style="display:none;">
+          <strong>🎯 学情诊断与整体表现：</strong>
+          <span id="aiContent"></span>
+        </div>
+
+        <div class="subject-tabs" id="subjectTabs"></div>
+
+        <div class="top-summary">
+          <div class="stat-box">
+            <div class="stat-label" id="scoreLabel">总分成绩 / 满分</div>
+            <div class="stat-val" id="myScoreVal">-</div>
+            <div class="stat-sub" id="kgZgSub">赋分后真实成绩</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">学校年级折算排名</div>
+            <div class="stat-val" id="gradeRankVal" style="color:var(--accent);">-</div>
+            <div class="stat-sub" id="gradeTotalSub">年级总考生: -</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">全校年级相对位置</div>
+            <div class="stat-val" id="levelVal">-</div>
+            <div class="stat-sub" id="sortDescSub">百分位: -</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">赋分等级</div>
+            <div class="stat-val" id="ratingVal" style="color:var(--primary);">-</div>
+            <div class="stat-sub">本校常规统考</div>
+          </div>
+        </div>
+
+        <div class="card-title" style="margin-top: 8px;">
+          <span>各科成绩单与名次对比 (包含赋分转换与折算排名)</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>科目 (km)</th>
+                <th>我的成绩</th>
+                <th>原始分</th>
+                <th>满分</th>
+                <th>学校年级排名</th>
+                <th>年级百分位</th>
+                <th>赋分等级</th>
+              </tr>
+            </thead>
+            <tbody id="subjectTableBody">
+              <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与折算排名</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>历次已认领考试成绩记录</span>
+          <span class="badge">累计考试</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>考试名称</th>
+                <th>发布时间</th>
+                <th>总分得分</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="trendTableBody">
+              <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      VERSION: "4.6.4",
+      RSA_PUB_B64: "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDrjEcFVWu6mizSyP3fCCaWZ3BeTeuZx44HHcWhzq6+FkueApOJbifi0VfaUO6S9eHvaJSEaCUFouD3cxr3fOk8RYQw1S1BcTscEbnqq/PCuoj5vj12t/M3dbqTdNKCrufSukwBask+OOHenu9IJzkmvrPurLnIC3yDTy3Ix9YliQIDAQAB",
+      STATIC_AES_KEY: CryptoJS.enc.Utf8.parse("c0f1a30cba2147949ee71cf71cba3c20")
+    };
+
+    let CLIENT = {
+      token: "",
+      userCode: "",
+      studentName: "",
+      schoolGuid: "",
+      schoolName: "",
+      ruCode: "",
+      currentGrade: "G2",
+      isVip: false,
+      rawAesKey: null,
+      cryptoKey: null,
+      bk: ""
+    };
+
+    let STATE = {
+      exams: [],
+      bundle: null,
+      selectedKm: "总分"
+    };
+
+    function encodeCredential(val) {
+      return btoa(unescape(encodeURIComponent(val + "{MTgyMjU2MDU0MjF7c3pvbmV9}")));
+    }
+
+    async function initClientCrypto() {
+      CLIENT.rawAesKey = window.crypto.getRandomValues(new Uint8Array(32));
+      CLIENT.cryptoKey = await window.crypto.subtle.importKey(
+        "raw", CLIENT.rawAesKey, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]
+      );
+
+      const aesKeyB64 = btoa(String.fromCharCode(...CLIENT.rawAesKey));
+      const encryptor = new JSEncrypt();
+      encryptor.setPublicKey(`-----BEGIN PUBLIC KEY-----\n${CONFIG.RSA_PUB_B64}\n-----END PUBLIC KEY-----`);
+      CLIENT.bk = encryptor.encrypt(aesKeyB64);
+    }
+
+    async function keyExchange() {
+      const resp = await fetch("https://szone-my.7net.cc/user", {
+        method: "POST",
+        headers: {
+          "Version": CONFIG.VERSION,
+          "Token": CLIENT.token,
+          "bk": CLIENT.bk,
+          "check-webp": "false"
+        }
+      });
+      return resp.ok;
+    }
+
+    async function encryptedRequest(method, url, params) {
+      const headers = {
+        "Version": CONFIG.VERSION,
+        "Token": CLIENT.token,
+        "bk": CLIENT.bk,
+        "check-webp": "false"
+      };
+
+      if (params && Object.keys(params).length > 0) {
+        const parts = Object.entries(params).map(([k, v]) => `${k}=${v}`);
+        const plaintext = new TextEncoder().encode(parts.join(";"));
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const ctAndTag = await window.crypto.subtle.encrypt(
+          { name: "AES-GCM", iv: iv, tagLength: 128 }, CLIENT.cryptoKey, plaintext
+        );
+
+        headers["bn"] = btoa(String.fromCharCode(...iv));
+        headers["bp"] = btoa(String.fromCharCode(...new Uint8Array(ctAndTag)));
+        headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8";
+      }
+
+      const res = await fetch(url, { method: method.toUpperCase(), headers: headers });
+      const raw = await res.json();
+
+      if (raw.data && raw.data.bn && raw.data.content) {
+        try {
+          const iv = Uint8Array.from(atob(raw.data.bn), c => c.charCodeAt(0));
+          const ctAndTag = Uint8Array.from(atob(raw.data.content), c => c.charCodeAt(0));
+          const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv, tagLength: 128 }, CLIENT.cryptoKey, ctAndTag
+          );
+          raw.data = JSON.parse(new TextDecoder().decode(decrypted));
+        } catch (e) {
+          console.warn("AES-GCM decrypt error", e);
+        }
+      }
+      return raw;
+    }
+
+    async function handleLogin() {
+      const userCode = document.getElementById("userCode").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!userCode || !password) {
+        alert("请输入手机号与登录密码");
+        return;
+      }
+
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true;
+      btn.textContent = "正在连接登录...";
+      document.getElementById("statusBox").textContent = "正在请求 https://szone-my.7net.cc/login...";
+
+      try {
+        const body = new URLSearchParams({
+          userCode: userCode,
+          password: encodeCredential(password)
+        }).toString();
+
+        const loginRes = await fetch("https://szone-my.7net.cc/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Version": CONFIG.VERSION
+          },
+          body: body
+        }).then(r => r.json());
+
+        if (loginRes.status !== 200 || !loginRes.data || !loginRes.data.token) {
+          throw new Error(loginRes.message || "登录认证失败，请检查账号密码");
+        }
+
+        CLIENT.token = loginRes.data.token;
+        CLIENT.userCode = userCode;
+
+        document.getElementById("statusBox").textContent = "登录成功！正在协商本地 AES-256 密钥...";
+        await initClientCrypto();
+        await keyExchange();
+
+        document.getElementById("statusBox").textContent = "密钥协商成功，正在拉取学生档案与考试列表...";
+        const infoRes = await encryptedRequest("GET", "https://szone-my.7net.cc/userInfo/GetUserInfo", null);
+        const u = infoRes.data || {};
+        CLIENT.studentName = u.studentName || "";
+        CLIENT.schoolGuid = u.schoolGuid || "";
+        CLIENT.schoolName = u.schoolName || "";
+        CLIENT.ruCode = u.ruCode || "";
+        CLIENT.currentGrade = (u.currentGrade || "G2").toUpperCase();
+        CLIENT.isVip = !!u.isVip;
+
+        localStorage.setItem("septnet_saved_userCode", userCode);
+
+        // 获取考试列表
+        await fetchExams();
+        document.getElementById("modeBadge").textContent = "已直连";
+        document.getElementById("modeBadge").className = "badge green";
+        document.getElementById("statusBox").textContent = `网关已就绪！已同步 ${CLIENT.studentName} 的 ${STATE.exams.length} 场考试。`;
+      } catch (err) {
+        document.getElementById("statusBox").textContent = "错误: " + err.message;
+        alert("登录错误: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "一键登录查分";
+      }
+    }
+
+    async function fetchExams() {
+      const q = new URLSearchParams({
+        startIndex: "0",
+        rows: "25",
+        schoolGuid: CLIENT.schoolGuid,
+        grade: CLIENT.currentGrade
+      }).toString();
+
+      const res = await fetch(`https://szone-score.7net.cc/exam/getClaimExams?${q}`, {
+        method: "GET",
+        headers: {
+          "Version": CONFIG.VERSION,
+          "Token": CLIENT.token
+        }
+      }).then(r => r.json());
+
+      let list = [];
+      if (res.data && res.data.isEncrypt && res.data.content) {
+        const decrypted = CryptoJS.AES.decrypt(res.data.content, CONFIG.STATIC_AES_KEY, {
+          mode: CryptoJS.mode.ECB,
+          padding: CryptoJS.pad.Pkcs7
+        });
+        const examsObj = JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
+        list = examsObj.list || [];
+      } else if (res.data && res.data.list) {
+        list = res.data.list;
+      }
+
+      STATE.exams = list.map(item => ({
+        examGuid: item.examGuid || item.guid,
+        examName: item.examName || "未命名考试",
+        examType: item.examType || (item.isUnion ? "联考" : "统考"),
+        queryTime: item.queryTime || item.examTime || "-",
+        totalScore: item.score || item.totalScore || "-",
+        fullScore: item.fullScore || 750
+      }));
+
+      if (STATE.exams.length > 0) {
+        await selectExam(STATE.exams[0].examGuid);
+      }
+    }
+
+    async function selectExam(examGuid) {
+      document.getElementById("statusBox").textContent = "正在拉取考试科目与年级排名数据...";
+      const eg = examGuid;
+      const targetExam = STATE.exams.find(e => e.examGuid === eg) || STATE.exams[0];
+
+      // 1. Question/Subjects
+      const subRes = await encryptedRequest("POST", "https://szone-score.7net.cc/Question/Subjects", {
+        examGuid: eg,
+        schoolGuid: CLIENT.schoolGuid,
+        grade: CLIENT.currentGrade,
+        schoolRuCode: CLIENT.ruCode
+      });
+
+      const subData = subRes.data || {};
+      const studentCount = parseInt(subData.exam_info?.studentCount || "1489", 10);
+      let aiConclusion = "";
+      const subMap = {};
+      (subData.list || []).forEach(s => {
+        if (s.km) {
+          subMap[s.km] = s;
+          if (s.km === "总分" && s.summary && s.summary.conclusion) {
+            aiConclusion = s.summary.conclusion;
+          }
+        }
+      });
+
+      // 2. Question/ScoreReport
+      const srRes = await encryptedRequest("POST", "https://szone-score.7net.cc/Question/ScoreReport", {
+        examGuid: eg,
+        schoolGuid: CLIENT.schoolGuid,
+        grade: CLIENT.currentGrade,
+        schoolRuCode: CLIENT.ruCode,
+        km: "总分"
+      });
+
+      const srMap = {};
+      ((srRes.data && srRes.data.km_list) || []).forEach(item => {
+        if (item.km) srMap[item.km] = item;
+      });
+
+      // 3. 组装科目
+      const orderedKms = ["总分", "语文", "数学", "英语", "物理", "化学", "生物", "政治", "历史", "地理"];
+      const subjects = [];
+
+      orderedKms.forEach(km => {
+        const sr = srMap[km];
+        const sub = subMap[km];
+        if (!sr && !sub) return;
+
+        if (sr && (sr.score === "缺考" || sr.kmTag === -100)) return;
+        if (sub && sub.code === -1) return;
+
+        const si = (sub && sub.scoreInfo) || {};
+        const sortDesc = si.sortDesc || "";
+        let pct = null;
+        if (sortDesc.includes(",")) {
+          pct = parseFloat(sortDesc.split(",")[0]);
+        }
+
+        const calcRank = (pct !== null && studentCount > 0)
+          ? Math.round((studentCount * pct) / 100).toString()
+          : "-";
+
+        const isFu = sr ? (sr.isFu === 1 || sr.fuTag) : false;
+        const rawScore = sr ? sr.score : (targetExam.totalScore || "-");
+        const fuScore = sr ? sr.fuScore : rawScore;
+        const displayScore = (isFu && fuScore && fuScore !== "0") ? fuScore : rawScore;
+        const fullScore = sr ? sr.fullScore : (targetExam.fullScore || 100);
+        const rating = (sr && sr.grade) || si.grade || "-";
+
+        subjects.push({
+          km: km,
+          isAll: km === "总分",
+          myScore: displayScore,
+          rawScore: rawScore,
+          isFu: isFu,
+          fullScore: fullScore,
+          gradeRank: calcRank,
+          gradeTotal: studentCount.toString(),
+          level: rating,
+          sortDesc: pct !== null ? `前 ${pct}%` : "-"
+        });
+      });
+
+      STATE.bundle = {
+        exam: targetExam,
+        user: {
+          studentName: CLIENT.studentName,
+          schoolName: CLIENT.schoolName,
+          currentGrade: CLIENT.currentGrade,
+          userCode: CLIENT.userCode,
+          isVip: CLIENT.isVip
+        },
+        subjects: subjects,
+        aiConclusion: aiConclusion
+      };
+
+      STATE.selectedKm = "总分";
+      document.getElementById("statusBox").textContent = "考试数据与折算排名加载完成！";
+      renderAll();
+    }
+
+    function renderAll() {
+      const b = STATE.bundle;
+      if (!b) return;
+
+      // 1. 学生档案
+      document.getElementById("uName").textContent = b.user.studentName || "-";
+      document.getElementById("uSchool").textContent = b.user.schoolName || "-";
+      document.getElementById("uGrade").textContent = b.user.currentGrade || "-";
+      document.getElementById("uCode").textContent = b.user.userCode || "-";
+      document.getElementById("vipTag").textContent = b.user.isVip ? "VIP 用户" : "非VIP (已自动解锁年级排名)";
+
+      // 2. 考试列表
+      document.getElementById("examCountBadge").textContent = `${STATE.exams.length} 场`;
+      const examContainer = document.getElementById("examListContainer");
+      examContainer.innerHTML = STATE.exams.map(ex => `
+        <div class="exam-item ${ex.examGuid === b.exam.examGuid ? 'active' : ''}"
+             onclick="selectExam('${ex.examGuid}')">
+          <div class="exam-name">${ex.examName}</div>
+          <div class="exam-meta">
+            <span>${ex.examType || '统考'} · 得分 ${ex.totalScore}</span>
+            <span>${ex.queryTime}</span>
+          </div>
+        </div>
+      `).join("");
+
+      // 3. 考试标题与诊断
+      document.getElementById("currentExamTitle").textContent = b.exam.examName;
+      document.getElementById("currentExamTime").textContent = `时间: ${b.exam.queryTime}`;
+
+      const aiBox = document.getElementById("aiBox");
+      if (b.aiConclusion) {
+        aiBox.style.display = "block";
+        document.getElementById("aiContent").innerHTML = b.aiConclusion;
+      } else {
+        aiBox.style.display = "none";
+      }
+
+      // 4. 科目切换标签
+      const tabsEl = document.getElementById("subjectTabs");
+      tabsEl.innerHTML = b.subjects.map(s => `
+        <div class="subject-tab ${s.km === STATE.selectedKm ? 'active' : ''}"
+             onclick="selectSubject('${s.km}')">
+          ${s.km} (${s.myScore}分)
+        </div>
+      `).join("");
+
+      const cur = b.subjects.find(s => s.km === STATE.selectedKm) || b.subjects[0];
+
+      // 5. 顶部四格卡片
+      document.getElementById("scoreLabel").textContent = `${cur.km}得分 / 满分`;
+      const rawText = (cur.isFu && cur.rawScore && cur.rawScore !== cur.myScore)
+        ? ` <span style="font-size:13px;color:var(--warn);font-weight:normal;">(原始 ${cur.rawScore})</span>`
+        : "";
+      document.getElementById("myScoreVal").innerHTML = `${cur.myScore} / ${cur.fullScore}${rawText}`;
+      document.getElementById("kgZgSub").textContent = cur.isFu ? "高考赋分换算后成绩" : "卷面原始得分";
+
+      document.getElementById("gradeRankVal").textContent = cur.gradeRank !== "-" ? `第 ${cur.gradeRank} 名` : "-";
+      document.getElementById("gradeTotalSub").textContent = `全校年级考生: ${cur.gradeTotal || '-'} 人`;
+
+      document.getElementById("levelVal").textContent = cur.sortDesc || "-";
+      document.getElementById("sortDescSub").textContent = `年级排名百分位: ${cur.sortDesc}`;
+      document.getElementById("ratingVal").textContent = `等级 ${cur.level}`;
+
+      // 6. 各科对比表格
+      const tbody = document.getElementById("subjectTableBody");
+      tbody.innerHTML = b.subjects.map(s => {
+        const isCurrent = s.km === STATE.selectedKm;
+        const rawNote = (s.isFu && s.rawScore && s.rawScore !== s.myScore)
+          ? `<span style="color:var(--warn)">${s.rawScore} (赋分转 ${s.myScore})</span>`
+          : `${s.rawScore || s.myScore}`;
+        const rankText = s.gradeRank !== "-"
+          ? `<strong style="color:var(--accent);">第 ${s.gradeRank} / ${s.gradeTotal} 名</strong>`
+          : "-";
+
+        return `
+          <tr style="${isCurrent ? 'background:rgba(56,189,248,0.1);font-weight:600;' : ''}"
+              onclick="selectSubject('${s.km}')" style="cursor:pointer;">
+            <td><strong>${s.km}</strong></td>
+            <td style="color:var(--primary);font-size:14px;font-weight:bold;">${s.myScore}</td>
+            <td>${rawNote}</td>
+            <td>${s.fullScore}</td>
+            <td>${rankText}</td>
+            <td><span class="badge">${s.sortDesc}</span></td>
+            <td><span class="badge ${s.level.startsWith('A') ? 'green' : (s.level.startsWith('B') ? 'gold' : '')}">${s.level}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      // 7. 历次考试记录
+      const trendBody = document.getElementById("trendTableBody");
+      trendBody.innerHTML = STATE.exams.map(ex => `
+        <tr style="${ex.examGuid === b.exam.examGuid ? 'background:rgba(56,189,248,0.08);font-weight:600;' : ''}"
+            onclick="selectExam('${ex.examGuid}')" style="cursor:pointer;">
+          <td>${ex.examName}</td>
+          <td>${ex.queryTime}</td>
+          <td style="color:var(--primary)"><strong>${ex.totalScore}</strong></td>
+          <td><span class="badge green">已认领</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function selectSubject(km) {
+      STATE.selectedKm = km;
+      renderAll();
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("septnet_saved_userCode");
+      CLIENT.token = "";
+      STATE.exams = [];
+      STATE.bundle = null;
+      document.getElementById("userCode").value = "";
+      document.getElementById("password").value = "";
+      document.getElementById("modeBadge").textContent = "未登录";
+      document.getElementById("modeBadge").className = "badge";
+      document.getElementById("statusBox").textContent = "已清除本地会话。";
+      document.getElementById("uName").textContent = "-";
+      document.getElementById("uSchool").textContent = "-";
+      document.getElementById("uGrade").textContent = "-";
+      document.getElementById("uCode").textContent = "-";
+      document.getElementById("examListContainer").innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>`;
+      document.getElementById("subjectTableBody").innerHTML = `<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与折算排名</td></tr>`;
+      document.getElementById("trendTableBody").innerHTML = `<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>`;
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedUser = localStorage.getItem("septnet_saved_userCode");
+      if (savedUser) {
+        document.getElementById("userCode").value = savedUser;
+      }
+    });
+  </script>
+</body>
+</html>

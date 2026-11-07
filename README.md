@@ -1,16 +1,23 @@
 # SeptnetScore · 七天学堂查分与年级排名分析工具
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android-green.svg)]()
+[![Online Website](https://img.shields.io/badge/Online%20Web-GitHub%20Pages-brightgreen.svg)](https://bailan766.github.io/SeptnetScore/)
+[![APK Release](https://img.shields.io/badge/Android%20APK-v1.0.0%20Release-blueviolet.svg)](https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0)
 [![API Version](https://img.shields.io/badge/Septnet%20API-v4.6.4-orange.svg)]()
 
 > 基于七天学堂 (`cc.septnet.student` v4.6.4) 原生网络层协议与加解密体系逆向分析构建的开源查分与排名分析工具。
-> 提供 **本地 Web 看板** 与 **独立 Android APK** 两种运行形态，无需充值会员即可自动解锁查看年级真实排名与百分位。
+> 提供 **在线静态网页 (GitHub Pages)**、**独立 Android 原生 APK** 以及 **本地 Python Web 服务** 三种使用形态，免 VIP 会员直接解锁全科年级真实排位、高考赋分与小题作答分布。
+
+🌐 **在线直接使用（无需安装环境或软件）**：[https://bailan766.github.io/SeptnetScore/](https://bailan766.github.io/SeptnetScore/)
+
+📱 **Android 手机客户端 APK 下载**：[GitHub Releases v1.0.0](https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0)（或直接在仓库根目录下载 `七天查分与排名_v4.6.4.apk`）
 
 ---
 
 ## ✨ 核心特性
 
+- 🌐 **纯前端无服务器运行 (GitHub Pages)**
+  得益于七天学堂微服务全域开放 CORS，前端基于浏览器原生 Web Crypto API (`AES-256-GCM`) 与 `JSEncrypt` (`RSA-1024`) 直接与官方接口进行端到端加密握手，数据不经过任何第三方服务器，安全纯粹。
 - 🔓 **免 VIP 解锁全科年级真实排名**
   官方对于普通非 VIP 账号隐藏年级名次（VIP-only 接口返回 405，界面显示 `处于年级***`）。本项目通过底层 `Question/Subjects` 返回的全校考生总数（`studentCount`）与百分位（`sortDesc`）精确反推总分及各单科在年级中的真实排位（例如：年级第 578 / 1489 名）。
 - 📊 **高考赋分与卷面原始分双模对照**
@@ -19,37 +26,40 @@
   自动抓取官方微服务生成的智能学情诊断总结（学科优势、相对薄弱点及整体定位）。
 - 📝 **单科小题全校选项作答分布**
   支持查看单科各小题的全校考生作答选项占比分布（A/B/C/D 各项百分比）与全校正确率。
-- 📱 **双端开源支持**
-  - **PC / Web 看板**：基于 Python 原生网络层与自适应 CSS 深色主题仪表盘。
+- 📱 **多端全平台适配**
+  - **在线静态网页**：手机或电脑浏览器打开即用，无需配置环境。
   - **Android 手机客户端**：Kotlin 原生封装微服务加解密体系，手机安装后完全脱离电脑独立运行。
+  - **本地 Python 看板**：基于 Python 原生网络层与自适应 CSS 深色主题仪表盘。
 - 🔒 **本地凭据持久化与隐私安全**
-  会话信息保存在本地 `session.json`（或 Android `SharedPreferences`），绝不上报任何第三方服务器。
+  纯前端运行或保存在本地，绝不上报任何第三方服务器。
 
 ---
 
-## 🏗️ 协议与底层逆向机制
+## 🚀 使用方式
 
-1. **微服务集群**
-   - 账号登录与用户信息微服务：`https://szone-my.7net.cc/`
-   - 考试与学科成绩微服务：`https://szone-score.7net.cc/`
+### 方式一：浏览器在线查分（推荐，即开即用）
 
-2. **原生加解密流程（LocalAesCryptoUtil / septnetlive）**
-   - **客户端密钥生成**：每次会话随机生成 32 字节 AES-256 密钥。
-   - **RSA 密钥加密**：使用官方内置 1024-bit RSA 公钥加密 AES 密钥，生成 `bk` 请求头。
-   - **密钥协商**：向 `POST https://szone-my.7net.cc/user` 登记 `bk`。
-   - **报文加密**：请求参数以 `;` 拼接后经 `AES-256-GCM` 加密，生成 12 字节随机 IV（`bn`）与密文+Tag（`bp`）。注意请求头名称 `bk`、`bn`、`bp` 服务端大小写敏感，必须全小写发送。
-   - **响应解密**：
-     - 动态业务报文通过协商的 `raw_aes_key` 与返回的 `bn` IV 进行 `AES-256-GCM` 解密。
-     - 考试列表等静态报文采用固化 AES-256-ECB 密钥（`c0f1a30cba2147949ee71cf71cba3c20`）解密。
+直接在电脑或手机浏览器打开：
+👉 **[https://bailan766.github.io/SeptnetScore/](https://bailan766.github.io/SeptnetScore/)**
 
-3. **排名计算公式**
-   $$\text{年级排名} = \mathrm{round}\left(\frac{\text{studentCount} \times \text{percentile}}{100}\right)$$
+输入七天学堂手机号与密码即可登录查分，所有数据均在浏览器本地解密渲染。
 
 ---
 
-## 🚀 快速开始
+### 方式二：Android 手机客户端安装
 
-### 方式一：运行本地 Web 看板 (Python)
+前往 [Releases 页面](https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0) 下载 `七天查分与排名_v4.6.4.apk`，安装到 Android 手机后即可离线脱机查分。
+
+若需自行编译：
+```bash
+cd septnet_app
+./gradlew assembleDebug
+```
+产物位于 `app/build/outputs/apk/debug/app-debug.apk`。
+
+---
+
+### 方式三：运行本地 Web 看板 (Python)
 
 #### 1. 环境准备
 需要 Python 3.8 或更高版本，依赖 `pycryptodome`：
