@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SeptnetScore · 赛博学情数据矩阵与年级排名分析 // ANALYTICS NEXUS</title>
+  <title>七天学堂 · 成绩与年级排名分析</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
   
   <!-- Crypto Libraries -->
@@ -20,37 +20,34 @@
 
   <style>
     :root {
-      --bg: #070a14;
-      --panel: rgba(11, 18, 36, 0.72);
-      --panel-hover: rgba(16, 26, 52, 0.85);
-      --border: rgba(0, 240, 255, 0.28);
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --text: #f0f6fc;
-      --muted: #94a3b8;
-      --primary: #00f0ff;
-      --primary-glow: rgba(0, 240, 255, 0.4);
-      --primary-dark: #0284c7;
-      --accent: #00ff88;
-      --accent-glow: rgba(0, 255, 136, 0.4);
-      --purple: #a855f7;
-      --warn: #ffb703;
-      --danger: #ff3366;
-      --font-mono: "JetBrains Mono", Consolas, "Fira Code", monospace;
+      --bg-base: #090a0f;
+      --card-bg: rgba(18, 20, 29, 0.7);
+      --card-hover: rgba(24, 27, 40, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --green: #10b981;
+      --warn: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --font-mono: "SF Mono", Consolas, Menlo, Monaco, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg-base);
+      color: var(--text-main);
       line-height: 1.5;
-      padding: 16px;
+      padding: 20px;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* 3D WebGL Canvas Layer */
     #bg-canvas {
       position: fixed;
       top: 0;
@@ -61,58 +58,9 @@
       pointer-events: none;
     }
 
-    /* Cyber Scanline Grid Overlay */
-    .cyber-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 15%, rgba(0, 240, 255, 0.06) 0%, transparent 65%),
-                  linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
-      background-size: 100% 100%, 36px 36px, 36px 36px;
-    }
-
-    .cyber-overlay::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      opacity: 0.35;
-      animation: scanline 8s linear infinite;
-    }
-
-    @keyframes scanline {
-      0% { top: -10px; opacity: 0; }
-      20% { opacity: 0.4; }
-      80% { opacity: 0.4; }
-      100% { top: 100%; opacity: 0; }
-    }
-
-    /* HUD Corner Brackets */
-    .hud-bracket {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-color: var(--primary);
-      border-style: solid;
-      pointer-events: none;
-      opacity: 0.8;
-    }
-    .hud-bracket.tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
-    .hud-bracket.tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
-    .hud-bracket.bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
-    .hud-bracket.br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
-
     .header-bar {
-      max-width: 1360px;
-      margin: 0 auto 16px auto;
+      max-width: 1280px;
+      margin: 0 auto 18px auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -120,132 +68,114 @@
       gap: 12px;
       position: relative;
       z-index: 10;
-      background: var(--panel);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 14px 20px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     }
+
     .header-title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(90deg, #ffffff, var(--primary) 70%, var(--accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     .header-links a {
-      color: var(--primary);
+      color: var(--text-muted);
       text-decoration: none;
       font-size: 12px;
-      font-family: var(--font-mono);
       margin-left: 12px;
       padding: 5px 12px;
       border-radius: 6px;
-      border: 1px solid rgba(0, 240, 255, 0.25);
-      background: rgba(0, 240, 255, 0.08);
-      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      transition: all 0.15s;
     }
     .header-links a:hover {
-      background: rgba(0, 240, 255, 0.2);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
+      border-color: var(--border-hover);
     }
     
     .container {
-      max-width: 1360px;
+      max-width: 1280px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 320px 1fr;
       gap: 16px;
       position: relative;
       z-index: 10;
     }
-    @media (max-width: 920px) {
+    @media (max-width: 900px) {
       .container { grid-template-columns: 1fr; }
     }
     
     .card {
-      position: relative;
-      background: var(--panel);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: 12px;
+      padding: 20px;
       margin-bottom: 16px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
-    .card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.15);
-    }
+
     .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #fff;
       margin-bottom: 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      letter-spacing: 0.3px;
     }
     
     .badge {
       display: inline-block;
-      padding: 3px 9px;
+      padding: 3px 8px;
       font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 600;
+      font-weight: 500;
       border-radius: 6px;
-      background: rgba(0, 240, 255, 0.12);
-      color: var(--primary);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
     }
     .badge.green {
-      background: rgba(0, 255, 136, 0.12);
-      color: var(--accent);
-      border-color: rgba(0, 255, 136, 0.35);
-      box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green);
+      border-color: rgba(16, 185, 129, 0.25);
     }
     .badge.gold {
-      background: rgba(255, 183, 3, 0.12);
+      background: rgba(245, 158, 11, 0.1);
       color: var(--warn);
-      border-color: rgba(255, 183, 3, 0.35);
-      box-shadow: 0 0 10px rgba(255, 183, 3, 0.2);
+      border-color: rgba(245, 158, 11, 0.25);
     }
     
     .form-group { margin-bottom: 12px; }
     .form-group label {
       display: block;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--muted);
+      font-size: 12px;
+      color: var(--text-dim);
       margin-bottom: 5px;
-      text-transform: uppercase;
     }
     .form-group input {
       width: 100%;
-      padding: 10px 14px;
+      padding: 9px 12px;
       border-radius: 8px;
-      border: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--text);
-      font-size: 14px;
-      font-family: var(--font-mono);
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--text-main);
+      font-size: 13.5px;
       outline: none;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
     .form-group input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+      border-color: var(--accent);
     }
     
     .btn-row { display: flex; gap: 8px; margin-top: 14px; }
@@ -253,49 +183,44 @@
       cursor: pointer;
       border: none;
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 9px 14px;
       font-size: 13px;
-      font-weight: 700;
-      transition: all 0.2s;
+      font-weight: 500;
+      transition: all 0.15s;
     }
     .btn-primary {
-      background: linear-gradient(135deg, #00f0ff 0%, #00a2ff 100%);
-      color: #030814;
+      background: #2563eb;
+      color: #fff;
       flex: 1;
-      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.35);
     }
-    .btn-primary:active, .btn-primary:hover {
-      background: linear-gradient(135deg, #38bdf8 0%, #00f0ff 100%);
-      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
-      transform: translateY(-1px);
+    .btn-primary:hover {
+      background: #1d4ed8;
     }
     .btn-secondary {
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text);
+      border: 1px solid var(--border);
+      color: var(--text-main);
     }
-    .btn-secondary:active, .btn-secondary:hover {
-      background: rgba(0, 240, 255, 0.15);
-      border-color: var(--primary);
-      color: #fff;
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-hover);
     }
     
     .exam-item {
       padding: 12px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
       margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
     .exam-item:hover, .exam-item.active {
-      background: rgba(0, 240, 255, 0.1);
-      border-color: var(--primary);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+      background: rgba(37, 99, 235, 0.08);
+      border-color: var(--accent);
     }
-    .exam-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-    .exam-meta { font-size: 11px; font-family: var(--font-mono); color: var(--muted); display: flex; justify-content: space-between; }
+    .exam-name { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+    .exam-meta { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; }
     
     .top-summary {
       display: grid;
@@ -307,20 +232,14 @@
       .top-summary { grid-template-columns: repeat(2, 1fr); }
     }
     .stat-box {
-      position: relative;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       padding: 14px;
-      transition: all 0.2s;
     }
-    .stat-box:hover {
-      border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
-    }
-    .stat-label { font-size: 11px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; }
-    .stat-val { font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: var(--text); margin-top: 4px; letter-spacing: 0.5px; }
-    .stat-sub { font-size: 11px; font-family: var(--font-mono); color: var(--accent); margin-top: 2px; }
+    .stat-label { font-size: 11.5px; color: var(--text-dim); }
+    .stat-val { font-size: 22px; font-weight: 700; color: #fff; margin-top: 4px; letter-spacing: -0.3px; }
+    .stat-sub { font-size: 11px; color: var(--green); margin-top: 2px; }
     
     .subject-tabs {
       display: flex;
@@ -331,20 +250,18 @@
     .subject-tab {
       padding: 6px 14px;
       border-radius: 6px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border-subtle);
-      color: var(--muted);
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
       font-size: 12px;
-      font-family: var(--font-mono);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
     .subject-tab:hover, .subject-tab.active {
-      background: rgba(0, 240, 255, 0.15);
-      color: var(--primary);
-      border-color: var(--primary);
-      font-weight: 700;
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+      background: rgba(37, 99, 235, 0.15);
+      color: #93c5fd;
+      border-color: rgba(37, 99, 235, 0.35);
+      font-weight: 600;
     }
     
     table {
@@ -353,55 +270,48 @@
       font-size: 13px;
     }
     th, td {
-      padding: 11px 14px;
+      padding: 10px 12px;
       text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--border);
     }
-    th { color: var(--muted); font-size: 12px; font-family: var(--font-mono); font-weight: 700; background: rgba(0, 0, 0, 0.4); text-transform: uppercase; }
-    tr:hover td { background: rgba(0, 240, 255, 0.04); }
+    th { color: var(--text-dim); font-size: 12px; font-weight: 600; background: rgba(0, 0, 0, 0.3); }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
     
     .status-banner {
       font-size: 12px;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 8px;
-      background: rgba(0, 240, 255, 0.08);
-      border: 1px solid rgba(0, 240, 255, 0.25);
-      color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      color: var(--text-muted);
       margin-top: 12px;
-      line-height: 1.6;
+      line-height: 1.5;
     }
     .ai-box {
-      background: rgba(0, 255, 136, 0.08);
-      border: 1px solid rgba(0, 255, 136, 0.25);
-      border-radius: 10px;
-      padding: 14px 16px;
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 8px;
+      padding: 12px 14px;
       font-size: 13px;
-      color: #e2e8f0;
-      margin-bottom: 16px;
-      line-height: 1.7;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
 
-  <!-- Three.js 3D Background Canvas -->
+  <!-- Three.js Subtle Dark Interactive 3D Mesh -->
   <canvas id="bg-canvas"></canvas>
 
-  <!-- Cyber Scanline Overlay -->
-  <div class="cyber-overlay"></div>
-
   <div class="header-bar">
-    <div class="hud-bracket tl"></div>
-    <div class="hud-bracket tr"></div>
-    <div class="hud-bracket bl"></div>
-    <div class="hud-bracket br"></div>
     <div class="header-title">
-      <span>📊 SEPTNET SCORE MATRIX // 七天学堂全息查分</span>
-      <span class="badge green">浏览器原生安全直连</span>
+      <span>📊 七天学堂查分与年级排名分析</span>
+      <span class="badge green">纯前端安全直连</span>
     </div>
     <div class="header-links">
-      <a href="https://github.com/Bailan766/SeptnetScore" target="_blank" rel="noopener">⭐ GitHub 源码</a>
-      <a href="https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0" target="_blank" rel="noopener">📱 Android 客户端</a>
+      <a href="https://github.com/Bailan766/SeptnetScore" target="_blank" rel="noopener">GitHub 源码 ↗</a>
+      <a href="https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0" target="_blank" rel="noopener">Android APK ↗</a>
     </div>
   </div>
 
@@ -409,12 +319,8 @@
     <!-- 左侧栏：登录与考试列表 -->
     <div>
       <div class="card">
-        <div class="hud-bracket tl"></div>
-        <div class="hud-bracket tr"></div>
-        <div class="hud-bracket bl"></div>
-        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>七天学堂 · 账号身份验证</span>
+          <span>账号登录</span>
           <span id="modeBadge" class="badge">未登录</span>
         </div>
         <div class="form-group">
@@ -426,42 +332,34 @@
           <input id="password" type="password" placeholder="输入密码" />
         </div>
         <div class="btn-row">
-          <button id="loginBtn" class="btn-primary" onclick="handleLogin()">一键登录查分</button>
-          <button class="btn-secondary" onclick="handleLogout()">清除退出</button>
+          <button id="loginBtn" class="btn-primary" onclick="handleLogin()">登录查分</button>
+          <button class="btn-secondary" onclick="handleLogout()">退出清除</button>
         </div>
         <div id="statusBox" class="status-banner">
-          官方 CORS 网关直连 szone-*.7net.cc，所有加解密均在浏览器本地执行，账号凭据绝不上报第三方服务器。
+          浏览器通过官方 CORS 网关直连 szone-*.7net.cc，所有加解密在本地进行，凭据不上报第三方。
         </div>
       </div>
 
       <div class="card">
-        <div class="hud-bracket tl"></div>
-        <div class="hud-bracket tr"></div>
-        <div class="hud-bracket bl"></div>
-        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>学生数字画像</span>
+          <span>学生信息</span>
           <span class="badge gold" id="vipTag">非VIP · 已自动解锁年级排名</span>
         </div>
-        <div style="font-size: 13px; color: var(--muted); line-height: 2.0; font-family: var(--font-mono);">
-          <div>姓名：<strong style="color:var(--text)" id="uName">-</strong></div>
-          <div>学校：<strong style="color:var(--text)" id="uSchool">-</strong></div>
-          <div>年级：<strong style="color:var(--text)" id="uGrade">-</strong></div>
-          <div>账号：<strong style="color:var(--text)" id="uCode">-</strong></div>
+        <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
+          <div>姓名：<strong style="color:#fff" id="uName">-</strong></div>
+          <div>学校：<strong style="color:#fff" id="uSchool">-</strong></div>
+          <div>年级：<strong style="color:#fff" id="uGrade">-</strong></div>
+          <div>账号：<strong style="color:#fff" id="uCode">-</strong></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="hud-bracket tl"></div>
-        <div class="hud-bracket tr"></div>
-        <div class="hud-bracket bl"></div>
-        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>已认领考试序列</span>
+          <span>已认领考试</span>
           <span class="badge" id="examCountBadge">0 场</span>
         </div>
         <div id="examListContainer">
-          <div style="color:var(--muted);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>
+          <div style="color:var(--text-dim);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>
         </div>
       </div>
     </div>
@@ -469,17 +367,13 @@
     <!-- 右侧主面板：成绩单、排名位置、各科对比 -->
     <div>
       <div class="card">
-        <div class="hud-bracket tl"></div>
-        <div class="hud-bracket tr"></div>
-        <div class="hud-bracket bl"></div>
-        <div class="hud-bracket br"></div>
         <div class="card-title">
           <span id="currentExamTitle">考试成绩与排名总览</span>
           <span class="badge" id="currentExamTime">-</span>
         </div>
 
         <div id="aiBox" class="ai-box" style="display:none;">
-          <strong>🎯 学情诊断与整体表现：</strong>
+          <strong>🎯 学情诊断：</strong>
           <span id="aiContent"></span>
         </div>
 
@@ -487,65 +381,53 @@
 
         <div class="top-summary">
           <div class="stat-box">
-            <div class="hud-bracket tl"></div>
-            <div class="hud-bracket br"></div>
             <div class="stat-label" id="scoreLabel">总分成绩 / 满分</div>
             <div class="stat-val" id="myScoreVal">-</div>
             <div class="stat-sub" id="kgZgSub">赋分后真实成绩</div>
           </div>
           <div class="stat-box">
-            <div class="hud-bracket tl"></div>
-            <div class="hud-bracket br"></div>
             <div class="stat-label">学校年级折算排名</div>
-            <div class="stat-val" id="gradeRankVal" style="color:var(--accent);">-</div>
+            <div class="stat-val" id="gradeRankVal" style="color:var(--green);">-</div>
             <div class="stat-sub" id="gradeTotalSub">年级总考生: -</div>
           </div>
           <div class="stat-box">
-            <div class="hud-bracket tl"></div>
-            <div class="hud-bracket br"></div>
             <div class="stat-label">全校年级相对位置</div>
             <div class="stat-val" id="levelVal">-</div>
             <div class="stat-sub" id="sortDescSub">百分位: -</div>
           </div>
           <div class="stat-box">
-            <div class="hud-bracket tl"></div>
-            <div class="hud-bracket br"></div>
             <div class="stat-label">赋分等级</div>
-            <div class="stat-val" id="ratingVal" style="color:var(--primary);">-</div>
+            <div class="stat-val" id="ratingVal" style="color:#60a5fa;">-</div>
             <div class="stat-sub">本校常规统考</div>
           </div>
         </div>
 
         <div class="card-title" style="margin-top: 10px;">
-          <span>各科成绩单与名次对比 (包含赋分转换与折算排名)</span>
+          <span>各科成绩单与名次对比</span>
         </div>
         <div style="overflow-x: auto;">
           <table>
             <thead>
               <tr>
-                <th>科目 (km)</th>
+                <th>科目</th>
                 <th>我的成绩</th>
                 <th>原始分</th>
                 <th>满分</th>
-                <th>学校年级排名</th>
-                <th>年级百分位</th>
+                <th>年级排名</th>
+                <th>百分位</th>
                 <th>赋分等级</th>
               </tr>
             </thead>
             <tbody id="subjectTableBody">
-              <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与折算排名</td></tr>
+              <tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与排名</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
       <div class="card">
-        <div class="hud-bracket tl"></div>
-        <div class="hud-bracket tr"></div>
-        <div class="hud-bracket bl"></div>
-        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>历次已认领考试成绩记录</span>
+          <span>历次考试记录</span>
           <span class="badge">累计考试</span>
         </div>
         <div style="overflow-x: auto;">
@@ -559,7 +441,7 @@
               </tr>
             </thead>
             <tbody id="trendTableBody">
-              <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>
+              <tr><td colspan="4" style="color:var(--text-dim);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>
             </tbody>
           </table>
         </div>
@@ -567,7 +449,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     const CONFIG = {
       VERSION: "4.6.4",
       RSA_PUB_B64: "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDrjEcFVWu6mizSyP3fCCaWZ3BeTeuZx44HHcWhzq6+FkueApOJbifi0VfaUO6S9eHvaJSEaCUFouD3cxr3fOk8RYQw1S1BcTscEbnqq/PCuoj5vj12t/M3dbqTdNKCrufSukwBask+OOHenu9IJzkmvrPurLnIC3yDTy3Ix9YliQIDAQAB",
@@ -1004,107 +886,57 @@
     });
   </script>
 
-  <!-- Three.js 3D Analytics Matrix Scene -->
+  <!-- Three.js Subtle Dark Interactive 3D Mesh -->
   <script>
-  (function initThreeAnalytics() {
+  (function initSubtle3D() {
     if (typeof THREE === 'undefined') return;
 
     var canvas = document.getElementById('bg-canvas');
     var scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x070a14, 0.0018);
+    scene.fog = new THREE.FogExp2(0x090a0f, 0.0016);
 
     var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1500);
-    camera.position.set(0, 80, 380);
+    camera.position.set(0, 90, 360);
 
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // 1. 3D Wave Floor
-    var floorGeo = new THREE.PlaneGeometry(1200, 1200, 40, 40);
-    floorGeo.rotateX(-Math.PI / 2);
-    var floorMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.12
-    });
-    var floorMesh = new THREE.Mesh(floorGeo, floorMat);
-    floorMesh.position.y = -140;
-    scene.add(floorMesh);
+    var rows = 45, cols = 45;
+    var count = rows * cols;
+    var positions = new Float32Array(count * 3);
 
-    // 2. Floating 3D Data Bars (Analytics Histogram)
-    var barGroup = new THREE.Group();
-    var barCount = 18;
-    var bars = [];
-    var barMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.35
-    });
-    var barMatAccent = new THREE.MeshBasicMaterial({
-      color: 0xa855f7,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.45
-    });
-
-    for (var b = 0; b < barCount; b++) {
-      var h = 30 + Math.random() * 80;
-      var barGeo = new THREE.BoxGeometry(16, h, 16);
-      var m = (b % 3 === 0) ? barMatAccent : barMat;
-      var bar = new THREE.Mesh(barGeo, m);
-      bar.position.set((b - barCount / 2) * 28, -80 + h / 2, -120 + (Math.sin(b) * 40));
-      bar.userData = { origH: h, speed: 1.5 + Math.random() };
-      bars.push(bar);
-      barGroup.add(bar);
-    }
-    scene.add(barGroup);
-
-    // 3. Floating Data Node Constellation
-    var nodeCount = 900;
-    var nodeGeo = new THREE.BufferGeometry();
-    var nodePos = new Float32Array(nodeCount * 3);
-    var nodeColors = new Float32Array(nodeCount * 3);
-
-    var cCyan = new THREE.Color(0x00f0ff);
-    var cGreen = new THREE.Color(0x00ff88);
-    var cPurple = new THREE.Color(0xa855f7);
-
-    for (var n = 0; n < nodeCount; n++) {
-      nodePos[n * 3] = (Math.random() - 0.5) * 1400;
-      nodePos[n * 3 + 1] = (Math.random() - 0.5) * 800;
-      nodePos[n * 3 + 2] = (Math.random() - 0.5) * 1200;
-
-      var rand = Math.random();
-      var c = rand < 0.5 ? cCyan : (rand < 0.8 ? cPurple : cGreen);
-      nodeColors[n * 3] = c.r;
-      nodeColors[n * 3 + 1] = c.g;
-      nodeColors[n * 3 + 2] = c.b;
+    var i = 0;
+    for (var ix = 0; ix < cols; ix++) {
+      for (var iy = 0; iy < rows; iy++) {
+        positions[i * 3] = ix * 26 - (cols * 26) / 2;
+        positions[i * 3 + 1] = -120;
+        positions[i * 3 + 2] = iy * 26 - (rows * 26) / 2;
+        i++;
+      }
     }
 
-    nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
-    nodeGeo.setAttribute('color', new THREE.BufferAttribute(nodeColors, 3));
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    var nodeMat = new THREE.PointsMaterial({
-      size: 3,
-      vertexColors: true,
+    var material = new THREE.PointsMaterial({
+      color: 0x3b82f6,
+      size: 2.2,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending
     });
-    var nodes = new THREE.Points(nodeGeo, nodeMat);
-    scene.add(nodes);
 
-    // Mouse Parallax
+    var particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
     var mouseX = 0, mouseY = 0;
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
     document.addEventListener('mousemove', function(e) {
-      mouseX = (e.clientX - windowHalfX) * 0.12;
-      mouseY = (e.clientY - windowHalfY) * 0.12;
+      mouseX = (e.clientX - windowHalfX) * 0.08;
+      mouseY = (e.clientY - windowHalfY) * 0.08;
     });
 
     window.addEventListener('resize', function() {
@@ -1119,31 +951,21 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      var t = clock.getElapsedTime();
+      var t = clock.getElapsedTime() * 0.8;
 
-      // Dynamic Bars Wave
-      for (var k = 0; k < bars.length; k++) {
-        var scaleY = 1 + Math.sin(t * bars[k].userData.speed + k) * 0.35;
-        bars[k].scale.y = scaleY;
+      var pos = geometry.attributes.position.array;
+      var idx = 0;
+      for (var ix = 0; ix < cols; ix++) {
+        for (var iy = 0; iy < rows; iy++) {
+          pos[idx * 3 + 1] = (Math.sin((ix + t) * 0.3) * 14) + (Math.sin((iy + t) * 0.4) * 14) - 120;
+          idx++;
+        }
       }
+      geometry.attributes.position.needsUpdate = true;
 
-      // Nodes Drift
-      nodes.rotation.y = t * 0.02;
-
-      // Floor Undulation
-      var count = floorGeo.attributes.position.count;
-      for (var f = 0; f < count; f++) {
-        var x = floorGeo.attributes.position.getX(f);
-        var z = floorGeo.attributes.position.getZ(f);
-        var y = Math.sin(x * 0.02 + t) * 10 + Math.cos(z * 0.02 + t) * 10;
-        floorGeo.attributes.position.setY(f, y);
-      }
-      floorGeo.attributes.position.needsUpdate = true;
-
-      // Camera Smooth Follow
-      camera.position.x += (mouseX - camera.position.x) * 0.04;
-      camera.position.y += (-mouseY + 70 - camera.position.y) * 0.04;
-      camera.lookAt(0, 0, 0);
+      camera.position.x += (mouseX - camera.position.x) * 0.03;
+      camera.position.y += (-mouseY + 80 - camera.position.y) * 0.03;
+      camera.lookAt(0, -30, 0);
 
       renderer.render(scene, camera);
     }
