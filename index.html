@@ -3,32 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SeptnetScore · 七天学堂在线查分与年级排名分析</title>
+  <title>SeptnetScore · 赛博学情数据矩阵与年级排名分析 // ANALYTICS NEXUS</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  
+  <!-- Crypto Libraries -->
   <script src="js/jsencrypt.min.js"></script>
   <script src="js/crypto-js.min.js"></script>
+  
+  <!-- Three.js (Local first, CDN fallback) -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --panel-hover: #26354d;
-      --border: #334155;
-      --text: #f8fafc;
+      --bg: #070a14;
+      --panel: rgba(11, 18, 36, 0.72);
+      --panel-hover: rgba(16, 26, 52, 0.85);
+      --border: rgba(0, 240, 255, 0.28);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --text: #f0f6fc;
       --muted: #94a3b8;
-      --primary: #38bdf8;
+      --primary: #00f0ff;
+      --primary-glow: rgba(0, 240, 255, 0.4);
       --primary-dark: #0284c7;
-      --accent: #34d399;
-      --warn: #fbbf24;
-      --danger: #f87171;
+      --accent: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.4);
+      --purple: #a855f7;
+      --warn: #ffb703;
+      --danger: #ff3366;
+      --font-mono: "JetBrains Mono", Consolas, "Fira Code", monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
       padding: 16px;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    /* 3D WebGL Canvas Layer */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Cyber Scanline Grid Overlay */
+    .cyber-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 15%, rgba(0, 240, 255, 0.06) 0%, transparent 65%),
+                  linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    .cyber-overlay::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0.35;
+      animation: scanline 8s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { top: -10px; opacity: 0; }
+      20% { opacity: 0.4; }
+      80% { opacity: 0.4; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    /* HUD Corner Brackets */
+    .hud-bracket {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: var(--primary);
+      border-style: solid;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    .hud-bracket.tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
+    .hud-bracket.tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
+    .hud-bracket.bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
+    .hud-bracket.br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+
     .header-bar {
       max-width: 1360px;
       margin: 0 auto 16px auto;
@@ -36,120 +117,186 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
+      position: relative;
+      z-index: 10;
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     }
     .header-title {
       font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #ffffff, var(--primary) 70%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .header-links a {
       color: var(--primary);
       text-decoration: none;
-      font-size: 13px;
-      margin-left: 14px;
-      transition: color 0.15s;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      margin-left: 12px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      background: rgba(0, 240, 255, 0.08);
+      transition: all 0.2s;
     }
-    .header-links a:hover { color: #fff; text-decoration: underline; }
+    .header-links a:hover {
+      background: rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+      color: #fff;
+    }
+    
     .container {
       max-width: 1360px;
       margin: 0 auto;
       display: grid;
       grid-template-columns: 340px 1fr;
       gap: 16px;
+      position: relative;
+      z-index: 10;
     }
     @media (max-width: 920px) {
       .container { grid-template-columns: 1fr; }
     }
+    
     .card {
+      position: relative;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 16px;
+      padding: 18px;
       margin-bottom: 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.15);
     }
     .card-title {
       font-size: 15px;
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      letter-spacing: 0.3px;
     }
+    
     .badge {
       display: inline-block;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 999px;
-      background: rgba(56, 189, 248, 0.15);
+      padding: 3px 9px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      border-radius: 6px;
+      background: rgba(0, 240, 255, 0.12);
       color: var(--primary);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
     }
     .badge.green {
-      background: rgba(52, 211, 153, 0.15);
+      background: rgba(0, 255, 136, 0.12);
       color: var(--accent);
-      border-color: rgba(52, 211, 153, 0.35);
+      border-color: rgba(0, 255, 136, 0.35);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
     }
     .badge.gold {
-      background: rgba(251, 191, 36, 0.15);
+      background: rgba(255, 183, 3, 0.12);
       color: var(--warn);
-      border-color: rgba(251, 191, 36, 0.35);
+      border-color: rgba(255, 183, 3, 0.35);
+      box-shadow: 0 0 10px rgba(255, 183, 3, 0.2);
     }
-    .form-group { margin-bottom: 10px; }
+    
+    .form-group { margin-bottom: 12px; }
     .form-group label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
+      font-family: var(--font-mono);
       color: var(--muted);
-      margin-bottom: 4px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
     }
     .form-group input {
       width: 100%;
-      padding: 9px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #0b1120;
+      border: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.4);
       color: var(--text);
       font-size: 14px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: all 0.2s;
     }
-    .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+    .form-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+    }
+    
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; }
     button {
       cursor: pointer;
       border: none;
       border-radius: 8px;
       padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.15s;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.2s;
     }
     .btn-primary {
-      background: var(--primary-dark);
-      color: #fff;
+      background: linear-gradient(135deg, #00f0ff 0%, #00a2ff 100%);
+      color: #030814;
       flex: 1;
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.35);
     }
-    .btn-primary:active, .btn-primary:hover { background: var(--primary); color: #0f172a; }
+    .btn-primary:active, .btn-primary:hover {
+      background: linear-gradient(135deg, #38bdf8 0%, #00f0ff 100%);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
+      transform: translateY(-1px);
+    }
     .btn-secondary {
-      background: #334155;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
       color: var(--text);
     }
-    .btn-secondary:active, .btn-secondary:hover { background: #475569; }
+    .btn-secondary:active, .btn-secondary:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    
     .exam-item {
       padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.25);
       margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .exam-item:hover, .exam-item.active {
-      background: var(--panel-hover);
+      background: rgba(0, 240, 255, 0.1);
       border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
     }
-    .exam-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .exam-meta { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+    .exam-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .exam-meta { font-size: 11px; font-family: var(--font-mono); color: var(--muted); display: flex; justify-content: space-between; }
+    
     .top-summary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -160,14 +307,21 @@
       .top-summary { grid-template-columns: repeat(2, 1fr); }
     }
     .stat-box {
-      background: #0b1120;
-      border: 1px solid var(--border);
+      position: relative;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      padding: 12px;
+      padding: 14px;
+      transition: all 0.2s;
     }
-    .stat-label { font-size: 12px; color: var(--muted); }
-    .stat-val { font-size: 22px; font-weight: 700; color: var(--text); margin-top: 4px; }
-    .stat-sub { font-size: 11px; color: var(--accent); margin-top: 2px; }
+    .stat-box:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+    }
+    .stat-label { font-size: 11px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; }
+    .stat-val { font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: var(--text); margin-top: 4px; letter-spacing: 0.5px; }
+    .stat-sub { font-size: 11px; font-family: var(--font-mono); color: var(--accent); margin-top: 2px; }
+    
     .subject-tabs {
       display: flex;
       gap: 8px;
@@ -175,64 +329,79 @@
       margin-bottom: 14px;
     }
     .subject-tab {
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: #0b1120;
-      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
+      font-family: var(--font-mono);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .subject-tab:hover, .subject-tab.active {
-      background: var(--primary-dark);
-      color: #fff;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--primary);
       border-color: var(--primary);
-      font-weight: 600;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
     }
+    
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
     }
     th, td {
-      padding: 10px 12px;
+      padding: 11px 14px;
       text-align: left;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-    th { color: var(--muted); font-weight: 600; background: #0b1120; }
-    tr:hover td { background: rgba(255, 255, 255, 0.03); }
+    th { color: var(--muted); font-size: 12px; font-family: var(--font-mono); font-weight: 700; background: rgba(0, 0, 0, 0.4); text-transform: uppercase; }
+    tr:hover td { background: rgba(0, 240, 255, 0.04); }
+    
     .status-banner {
       font-size: 12px;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
       color: var(--primary);
-      margin-top: 10px;
-      line-height: 1.5;
+      margin-top: 12px;
+      line-height: 1.6;
     }
     .ai-box {
-      background: rgba(52, 211, 153, 0.08);
-      border: 1px solid rgba(52, 211, 153, 0.25);
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.25);
       border-radius: 10px;
-      padding: 12px 14px;
+      padding: 14px 16px;
       font-size: 13px;
       color: #e2e8f0;
-      margin-bottom: 14px;
-      line-height: 1.6;
+      margin-bottom: 16px;
+      line-height: 1.7;
     }
   </style>
 </head>
 <body>
+
+  <!-- Three.js 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Cyber Scanline Overlay -->
+  <div class="cyber-overlay"></div>
+
   <div class="header-bar">
+    <div class="hud-bracket tl"></div>
+    <div class="hud-bracket tr"></div>
+    <div class="hud-bracket bl"></div>
+    <div class="hud-bracket br"></div>
     <div class="header-title">
-      <span>📊 SeptnetScore</span>
-      <span class="badge green">纯前端浏览器直连</span>
+      <span>📊 SEPTNET SCORE MATRIX // 七天学堂全息查分</span>
+      <span class="badge green">浏览器原生安全直连</span>
     </div>
     <div class="header-links">
-      <a href="https://github.com/Bailan766/SeptnetScore" target="_blank">⭐ GitHub 源码</a>
-      <a href="https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0" target="_blank">📱 下载 Android APK</a>
+      <a href="https://github.com/Bailan766/SeptnetScore" target="_blank" rel="noopener">⭐ GitHub 源码</a>
+      <a href="https://github.com/Bailan766/SeptnetScore/releases/tag/v1.0.0" target="_blank" rel="noopener">📱 Android 客户端</a>
     </div>
   </div>
 
@@ -240,8 +409,12 @@
     <!-- 左侧栏：登录与考试列表 -->
     <div>
       <div class="card">
+        <div class="hud-bracket tl"></div>
+        <div class="hud-bracket tr"></div>
+        <div class="hud-bracket bl"></div>
+        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>七天学堂 · 账号登录</span>
+          <span>七天学堂 · 账号身份验证</span>
           <span id="modeBadge" class="badge">未登录</span>
         </div>
         <div class="form-group">
@@ -257,16 +430,20 @@
           <button class="btn-secondary" onclick="handleLogout()">清除退出</button>
         </div>
         <div id="statusBox" class="status-banner">
-          浏览器通过官方 CORS 网关直连 szone-*.7net.cc，所有加解密均在浏览器本地执行，账号凭据绝不上报第三方服务器。
+          官方 CORS 网关直连 szone-*.7net.cc，所有加解密均在浏览器本地执行，账号凭据绝不上报第三方服务器。
         </div>
       </div>
 
       <div class="card">
+        <div class="hud-bracket tl"></div>
+        <div class="hud-bracket tr"></div>
+        <div class="hud-bracket bl"></div>
+        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>学生档案</span>
+          <span>学生数字画像</span>
           <span class="badge gold" id="vipTag">非VIP · 已自动解锁年级排名</span>
         </div>
-        <div style="font-size: 13px; color: var(--muted); line-height: 1.9;">
+        <div style="font-size: 13px; color: var(--muted); line-height: 2.0; font-family: var(--font-mono);">
           <div>姓名：<strong style="color:var(--text)" id="uName">-</strong></div>
           <div>学校：<strong style="color:var(--text)" id="uSchool">-</strong></div>
           <div>年级：<strong style="color:var(--text)" id="uGrade">-</strong></div>
@@ -275,8 +452,12 @@
       </div>
 
       <div class="card">
+        <div class="hud-bracket tl"></div>
+        <div class="hud-bracket tr"></div>
+        <div class="hud-bracket bl"></div>
+        <div class="hud-bracket br"></div>
         <div class="card-title">
-          <span>已认领考试列表</span>
+          <span>已认领考试序列</span>
           <span class="badge" id="examCountBadge">0 场</span>
         </div>
         <div id="examListContainer">
@@ -288,6 +469,10 @@
     <!-- 右侧主面板：成绩单、排名位置、各科对比 -->
     <div>
       <div class="card">
+        <div class="hud-bracket tl"></div>
+        <div class="hud-bracket tr"></div>
+        <div class="hud-bracket bl"></div>
+        <div class="hud-bracket br"></div>
         <div class="card-title">
           <span id="currentExamTitle">考试成绩与排名总览</span>
           <span class="badge" id="currentExamTime">-</span>
@@ -302,28 +487,36 @@
 
         <div class="top-summary">
           <div class="stat-box">
+            <div class="hud-bracket tl"></div>
+            <div class="hud-bracket br"></div>
             <div class="stat-label" id="scoreLabel">总分成绩 / 满分</div>
             <div class="stat-val" id="myScoreVal">-</div>
             <div class="stat-sub" id="kgZgSub">赋分后真实成绩</div>
           </div>
           <div class="stat-box">
+            <div class="hud-bracket tl"></div>
+            <div class="hud-bracket br"></div>
             <div class="stat-label">学校年级折算排名</div>
             <div class="stat-val" id="gradeRankVal" style="color:var(--accent);">-</div>
             <div class="stat-sub" id="gradeTotalSub">年级总考生: -</div>
           </div>
           <div class="stat-box">
+            <div class="hud-bracket tl"></div>
+            <div class="hud-bracket br"></div>
             <div class="stat-label">全校年级相对位置</div>
             <div class="stat-val" id="levelVal">-</div>
             <div class="stat-sub" id="sortDescSub">百分位: -</div>
           </div>
           <div class="stat-box">
+            <div class="hud-bracket tl"></div>
+            <div class="hud-bracket br"></div>
             <div class="stat-label">赋分等级</div>
             <div class="stat-val" id="ratingVal" style="color:var(--primary);">-</div>
             <div class="stat-sub">本校常规统考</div>
           </div>
         </div>
 
-        <div class="card-title" style="margin-top: 8px;">
+        <div class="card-title" style="margin-top: 10px;">
           <span>各科成绩单与名次对比 (包含赋分转换与折算排名)</span>
         </div>
         <div style="overflow-x: auto;">
@@ -347,6 +540,10 @@
       </div>
 
       <div class="card">
+        <div class="hud-bracket tl"></div>
+        <div class="hud-bracket tr"></div>
+        <div class="hud-bracket bl"></div>
+        <div class="hud-bracket br"></div>
         <div class="card-title">
           <span>历次已认领考试成绩记录</span>
           <span class="badge">累计考试</span>
@@ -806,5 +1003,154 @@
       }
     });
   </script>
+
+  <!-- Three.js 3D Analytics Matrix Scene -->
+  <script>
+  (function initThreeAnalytics() {
+    if (typeof THREE === 'undefined') return;
+
+    var canvas = document.getElementById('bg-canvas');
+    var scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x070a14, 0.0018);
+
+    var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1500);
+    camera.position.set(0, 80, 380);
+
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // 1. 3D Wave Floor
+    var floorGeo = new THREE.PlaneGeometry(1200, 1200, 40, 40);
+    floorGeo.rotateX(-Math.PI / 2);
+    var floorMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12
+    });
+    var floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.position.y = -140;
+    scene.add(floorMesh);
+
+    // 2. Floating 3D Data Bars (Analytics Histogram)
+    var barGroup = new THREE.Group();
+    var barCount = 18;
+    var bars = [];
+    var barMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35
+    });
+    var barMatAccent = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.45
+    });
+
+    for (var b = 0; b < barCount; b++) {
+      var h = 30 + Math.random() * 80;
+      var barGeo = new THREE.BoxGeometry(16, h, 16);
+      var m = (b % 3 === 0) ? barMatAccent : barMat;
+      var bar = new THREE.Mesh(barGeo, m);
+      bar.position.set((b - barCount / 2) * 28, -80 + h / 2, -120 + (Math.sin(b) * 40));
+      bar.userData = { origH: h, speed: 1.5 + Math.random() };
+      bars.push(bar);
+      barGroup.add(bar);
+    }
+    scene.add(barGroup);
+
+    // 3. Floating Data Node Constellation
+    var nodeCount = 900;
+    var nodeGeo = new THREE.BufferGeometry();
+    var nodePos = new Float32Array(nodeCount * 3);
+    var nodeColors = new Float32Array(nodeCount * 3);
+
+    var cCyan = new THREE.Color(0x00f0ff);
+    var cGreen = new THREE.Color(0x00ff88);
+    var cPurple = new THREE.Color(0xa855f7);
+
+    for (var n = 0; n < nodeCount; n++) {
+      nodePos[n * 3] = (Math.random() - 0.5) * 1400;
+      nodePos[n * 3 + 1] = (Math.random() - 0.5) * 800;
+      nodePos[n * 3 + 2] = (Math.random() - 0.5) * 1200;
+
+      var rand = Math.random();
+      var c = rand < 0.5 ? cCyan : (rand < 0.8 ? cPurple : cGreen);
+      nodeColors[n * 3] = c.r;
+      nodeColors[n * 3 + 1] = c.g;
+      nodeColors[n * 3 + 2] = c.b;
+    }
+
+    nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
+    nodeGeo.setAttribute('color', new THREE.BufferAttribute(nodeColors, 3));
+
+    var nodeMat = new THREE.PointsMaterial({
+      size: 3,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending
+    });
+    var nodes = new THREE.Points(nodeGeo, nodeMat);
+    scene.add(nodes);
+
+    // Mouse Parallax
+    var mouseX = 0, mouseY = 0;
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+
+    document.addEventListener('mousemove', function(e) {
+      mouseX = (e.clientX - windowHalfX) * 0.12;
+      mouseY = (e.clientY - windowHalfY) * 0.12;
+    });
+
+    window.addEventListener('resize', function() {
+      windowHalfX = window.innerWidth / 2;
+      windowHalfY = window.innerHeight / 2;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    var clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      var t = clock.getElapsedTime();
+
+      // Dynamic Bars Wave
+      for (var k = 0; k < bars.length; k++) {
+        var scaleY = 1 + Math.sin(t * bars[k].userData.speed + k) * 0.35;
+        bars[k].scale.y = scaleY;
+      }
+
+      // Nodes Drift
+      nodes.rotation.y = t * 0.02;
+
+      // Floor Undulation
+      var count = floorGeo.attributes.position.count;
+      for (var f = 0; f < count; f++) {
+        var x = floorGeo.attributes.position.getX(f);
+        var z = floorGeo.attributes.position.getZ(f);
+        var y = Math.sin(x * 0.02 + t) * 10 + Math.cos(z * 0.02 + t) * 10;
+        floorGeo.attributes.position.setY(f, y);
+      }
+      floorGeo.attributes.position.needsUpdate = true;
+
+      // Camera Smooth Follow
+      camera.position.x += (mouseX - camera.position.x) * 0.04;
+      camera.position.y += (-mouseY + 70 - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  })();
+  </script>
+
 </body>
 </html>
