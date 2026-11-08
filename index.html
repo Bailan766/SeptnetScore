@@ -20,28 +20,29 @@
 
   <style>
     :root {
-      --bg-base: #090a0f;
-      --card-bg: rgba(18, 20, 29, 0.7);
-      --card-hover: rgba(24, 27, 40, 0.85);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 255, 255, 0.2);
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --green: #10b981;
-      --warn: #f59e0b;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --text-dim: #6b7280;
-      --font-mono: "SF Mono", Consolas, Menlo, Monaco, monospace;
+      --bg-base: #04060d;
+      --card-bg: rgba(10, 15, 29, 0.65);
+      --card-border: rgba(56, 189, 248, 0.16);
+      --card-border-hover: rgba(56, 189, 248, 0.5);
+      --cyan: #00f5ff;
+      --cyan-glow: rgba(0, 245, 255, 0.35);
+      --blue: #38bdf8;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --warn: #fbbf24;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--bg-base);
-      color: var(--text-main);
+      color: var(--text-primary);
       line-height: 1.5;
-      padding: 20px;
+      padding: 24px 16px 40px;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -58,9 +59,21 @@
       pointer-events: none;
     }
 
+    .ambient-glow-1 {
+      position: fixed;
+      top: -100px;
+      left: 20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+      z-index: 1;
+      pointer-events: none;
+      filter: blur(80px);
+    }
+
     .header-bar {
-      max-width: 1280px;
-      margin: 0 auto 18px auto;
+      max-width: 1300px;
+      margin: 0 auto 20px auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -69,67 +82,78 @@
       position: relative;
       z-index: 10;
       background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 20px;
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .header-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      background: linear-gradient(90deg, #ffffff 40%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
     .header-links a {
-      color: var(--text-muted);
+      color: #fff;
       text-decoration: none;
       font-size: 12px;
+      font-family: var(--font-mono);
       margin-left: 12px;
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.04);
-      transition: all 0.15s;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.2s;
     }
     .header-links a:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
     }
     
     .container {
-      max-width: 1280px;
+      max-width: 1300px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 16px;
+      grid-template-columns: 330px 1fr;
+      gap: 18px;
       position: relative;
       z-index: 10;
     }
-    @media (max-width: 900px) {
+    @media (max-width: 920px) {
       .container { grid-template-columns: 1fr; }
     }
     
     .card {
       background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.15);
     }
 
     .card-title {
-      font-size: 14.5px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
       color: #fff;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -137,45 +161,50 @@
     
     .badge {
       display: inline-block;
-      padding: 3px 8px;
+      padding: 3px 9px;
       font-size: 11px;
-      font-weight: 500;
+      font-family: var(--font-mono);
+      font-weight: 600;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
     }
     .badge.green {
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--green);
-      border-color: rgba(16, 185, 129, 0.25);
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
     }
     .badge.gold {
-      background: rgba(245, 158, 11, 0.1);
+      background: rgba(251, 191, 36, 0.12);
       color: var(--warn);
-      border-color: rgba(245, 158, 11, 0.25);
+      border-color: rgba(251, 191, 36, 0.3);
     }
     
     .form-group { margin-bottom: 12px; }
     .form-group label {
       display: block;
-      font-size: 12px;
-      color: var(--text-dim);
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
       margin-bottom: 5px;
     }
     .form-group input {
       width: 100%;
-      padding: 9px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.3);
-      color: var(--text-main);
-      font-size: 13.5px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font-size: 14px;
+      font-family: var(--font-mono);
       outline: none;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .form-group input:focus {
-      border-color: var(--accent);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0, 245, 255, 0.25);
     }
     
     .btn-row { display: flex; gap: 8px; margin-top: 14px; }
@@ -183,63 +212,73 @@
       cursor: pointer;
       border: none;
       border-radius: 8px;
-      padding: 9px 14px;
+      padding: 10px 14px;
       font-size: 13px;
-      font-weight: 500;
-      transition: all 0.15s;
+      font-weight: 600;
+      transition: all 0.2s;
     }
     .btn-primary {
-      background: #2563eb;
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
       color: #fff;
       flex: 1;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
     }
     .btn-primary:hover {
-      background: #1d4ed8;
+      background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+      transform: translateY(-1px);
     }
     .btn-secondary {
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
     }
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
     }
     
     .exam-item {
       padding: 12px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.25);
       margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .exam-item:hover, .exam-item.active {
-      background: rgba(37, 99, 235, 0.08);
-      border-color: var(--accent);
+      background: rgba(0, 245, 255, 0.08);
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 245, 255, 0.15);
     }
-    .exam-name { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; color: #fff; }
-    .exam-meta { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; }
+    .exam-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+    .exam-meta { font-size: 11.5px; font-family: var(--font-mono); color: var(--text-muted); display: flex; justify-content: space-between; }
     
     .top-summary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     @media (max-width: 680px) {
       .top-summary { grid-template-columns: repeat(2, 1fr); }
     }
     .stat-box {
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
       padding: 14px;
+      transition: all 0.2s;
     }
-    .stat-label { font-size: 11.5px; color: var(--text-dim); }
-    .stat-val { font-size: 22px; font-weight: 700; color: #fff; margin-top: 4px; letter-spacing: -0.3px; }
-    .stat-sub { font-size: 11px; color: var(--green); margin-top: 2px; }
+    .stat-box:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+    }
+    .stat-label { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; }
+    .stat-val { font-size: 24px; font-weight: 700; font-family: var(--font-mono); color: #fff; margin-top: 4px; letter-spacing: -0.3px; }
+    .stat-sub { font-size: 11px; font-family: var(--font-mono); color: #34d399; margin-top: 2px; }
     
     .subject-tabs {
       display: flex;
@@ -250,17 +289,18 @@
     .subject-tab {
       padding: 6px 14px;
       border-radius: 6px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text-muted);
       font-size: 12px;
+      font-family: var(--font-mono);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .subject-tab:hover, .subject-tab.active {
-      background: rgba(37, 99, 235, 0.15);
-      color: #93c5fd;
-      border-color: rgba(37, 99, 235, 0.35);
+      background: rgba(0, 245, 255, 0.12);
+      color: var(--cyan);
+      border-color: rgba(0, 245, 255, 0.35);
       font-weight: 600;
     }
     
@@ -270,39 +310,40 @@
       font-size: 13px;
     }
     th, td {
-      padding: 10px 12px;
+      padding: 11px 14px;
       text-align: left;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-    th { color: var(--text-dim); font-size: 12px; font-weight: 600; background: rgba(0, 0, 0, 0.3); }
-    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    th { color: var(--text-muted); font-size: 12px; font-family: var(--font-mono); font-weight: 600; background: rgba(0, 0, 0, 0.35); }
+    tr:hover td { background: rgba(0, 245, 255, 0.03); }
     
     .status-banner {
       font-size: 12px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
-      background: rgba(37, 99, 235, 0.08);
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      color: var(--text-muted);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #93c5fd;
       margin-top: 12px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     .ai-box {
-      background: rgba(16, 185, 129, 0.06);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
       font-size: 13px;
-      color: var(--text-main);
-      margin-bottom: 14px;
-      line-height: 1.6;
+      color: #e2e8f0;
+      margin-bottom: 16px;
+      line-height: 1.7;
     }
   </style>
 </head>
 <body>
 
-  <!-- Three.js Subtle Dark Interactive 3D Mesh -->
+  <!-- Three.js 3D Background Canvas -->
   <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow-1"></div>
 
   <div class="header-bar">
     <div class="header-title">
@@ -333,19 +374,19 @@
         </div>
         <div class="btn-row">
           <button id="loginBtn" class="btn-primary" onclick="handleLogin()">登录查分</button>
-          <button class="btn-secondary" onclick="handleLogout()">退出清除</button>
+          <button class="btn-secondary" onclick="handleLogout()">清除退出</button>
         </div>
         <div id="statusBox" class="status-banner">
-          浏览器通过官方 CORS 网关直连 szone-*.7net.cc，所有加解密在本地进行，凭据不上报第三方。
+          浏览器通过官方 CORS 网关直连 szone-*.7net.cc，所有加解密在本地进行，账号凭据绝不上报第三方。
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">
-          <span>学生信息</span>
+          <span>学生画像</span>
           <span class="badge gold" id="vipTag">非VIP · 已自动解锁年级排名</span>
         </div>
-        <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
+        <div style="font-size: 13px; color: var(--text-muted); line-height: 1.9; font-family: var(--font-mono);">
           <div>姓名：<strong style="color:#fff" id="uName">-</strong></div>
           <div>学校：<strong style="color:#fff" id="uSchool">-</strong></div>
           <div>年级：<strong style="color:#fff" id="uGrade">-</strong></div>
@@ -359,7 +400,7 @@
           <span class="badge" id="examCountBadge">0 场</span>
         </div>
         <div id="examListContainer">
-          <div style="color:var(--text-dim);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>
+          <div style="color:var(--text-muted);font-size:13px;padding:8px 0;">暂无考试，请先登录</div>
         </div>
       </div>
     </div>
@@ -387,7 +428,7 @@
           </div>
           <div class="stat-box">
             <div class="stat-label">学校年级折算排名</div>
-            <div class="stat-val" id="gradeRankVal" style="color:var(--green);">-</div>
+            <div class="stat-val" id="gradeRankVal" style="color:#34d399;">-</div>
             <div class="stat-sub" id="gradeTotalSub">年级总考生: -</div>
           </div>
           <div class="stat-box">
@@ -397,7 +438,7 @@
           </div>
           <div class="stat-box">
             <div class="stat-label">赋分等级</div>
-            <div class="stat-val" id="ratingVal" style="color:#60a5fa;">-</div>
+            <div class="stat-val" id="ratingVal" style="color:#38bdf8;">-</div>
             <div class="stat-sub">本校常规统考</div>
           </div>
         </div>
@@ -419,7 +460,7 @@
               </tr>
             </thead>
             <tbody id="subjectTableBody">
-              <tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与排名</td></tr>
+              <tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:18px;">请在左侧登录后查看各科成绩与排名</td></tr>
             </tbody>
           </table>
         </div>
@@ -441,7 +482,7 @@
               </tr>
             </thead>
             <tbody id="trendTableBody">
-              <tr><td colspan="4" style="color:var(--text-dim);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>
+              <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:12px;">登录后自动加载历次考试记录</td></tr>
             </tbody>
           </table>
         </div>
@@ -886,57 +927,76 @@
     });
   </script>
 
-  <!-- Three.js Subtle Dark Interactive 3D Mesh -->
+  <!-- Three.js 3D Quantum Data Wave Scene -->
   <script>
-  (function initSubtle3D() {
+  (function initThreeScene() {
     if (typeof THREE === 'undefined') return;
 
     var canvas = document.getElementById('bg-canvas');
     var scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x090a0f, 0.0016);
+    scene.fog = new THREE.FogExp2(0x04060d, 0.0018);
 
     var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1500);
-    camera.position.set(0, 90, 360);
+    camera.position.set(0, 80, 360);
 
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    var rows = 45, cols = 45;
-    var count = rows * cols;
-    var positions = new Float32Array(count * 3);
+    var waveCols = 45, waveRows = 45;
+    var waveCount = waveCols * waveRows;
+    var wavePositions = new Float32Array(waveCount * 3);
 
-    var i = 0;
-    for (var ix = 0; ix < cols; ix++) {
-      for (var iy = 0; iy < rows; iy++) {
-        positions[i * 3] = ix * 26 - (cols * 26) / 2;
-        positions[i * 3 + 1] = -120;
-        positions[i * 3 + 2] = iy * 26 - (rows * 26) / 2;
-        i++;
+    var p = 0;
+    for (var wx = 0; wx < waveCols; wx++) {
+      for (var wy = 0; wy < waveRows; wy++) {
+        wavePositions[p * 3] = wx * 28 - (waveCols * 28) / 2;
+        wavePositions[p * 3 + 1] = -140;
+        wavePositions[p * 3 + 2] = wy * 28 - (waveRows * 28) / 2;
+        p++;
       }
     }
 
-    var geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    var waveGeo = new THREE.BufferGeometry();
+    waveGeo.setAttribute('position', new THREE.BufferAttribute(wavePositions, 3));
 
-    var material = new THREE.PointsMaterial({
-      color: 0x3b82f6,
+    var waveMat = new THREE.PointsMaterial({
+      color: 0x38bdf8,
       size: 2.2,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.45,
       blending: THREE.AdditiveBlending
     });
+    var waveMesh = new THREE.Points(waveGeo, waveMat);
+    scene.add(waveMesh);
 
-    var particles = new THREE.Points(geometry, material);
-    scene.add(particles);
+    // Deep Floating Particles
+    var starCount = 400;
+    var starGeo = new THREE.BufferGeometry();
+    var starPos = new Float32Array(starCount * 3);
+    for (var k = 0; k < starCount; k++) {
+      starPos[k * 3] = (Math.random() - 0.5) * 1400;
+      starPos[k * 3 + 1] = (Math.random() - 0.5) * 800;
+      starPos[k * 3 + 2] = (Math.random() - 0.5) * 1200;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    var starMat = new THREE.PointsMaterial({
+      size: 2,
+      color: 0x00f5ff,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending
+    });
+    var stars = new THREE.Points(starGeo, starMat);
+    scene.add(stars);
 
     var mouseX = 0, mouseY = 0;
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
     document.addEventListener('mousemove', function(e) {
-      mouseX = (e.clientX - windowHalfX) * 0.08;
-      mouseY = (e.clientY - windowHalfY) * 0.08;
+      mouseX = (e.clientX - windowHalfX) * 0.1;
+      mouseY = (e.clientY - windowHalfY) * 0.1;
     });
 
     window.addEventListener('resize', function() {
@@ -951,21 +1011,22 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      var t = clock.getElapsedTime() * 0.8;
+      var t = clock.getElapsedTime();
 
-      var pos = geometry.attributes.position.array;
+      var posArray = waveGeo.attributes.position.array;
       var idx = 0;
-      for (var ix = 0; ix < cols; ix++) {
-        for (var iy = 0; iy < rows; iy++) {
-          pos[idx * 3 + 1] = (Math.sin((ix + t) * 0.3) * 14) + (Math.sin((iy + t) * 0.4) * 14) - 120;
+      for (var ix = 0; ix < waveCols; ix++) {
+        for (var iy = 0; iy < waveRows; iy++) {
+          posArray[idx * 3 + 1] = (Math.sin((ix + t * 2) * 0.3) * 14) + (Math.sin((iy + t * 1.5) * 0.4) * 14) - 130;
           idx++;
         }
       }
-      geometry.attributes.position.needsUpdate = true;
+      waveGeo.attributes.position.needsUpdate = true;
+      stars.rotation.y = t * 0.02;
 
-      camera.position.x += (mouseX - camera.position.x) * 0.03;
-      camera.position.y += (-mouseY + 80 - camera.position.y) * 0.03;
-      camera.lookAt(0, -30, 0);
+      camera.position.x += (mouseX - camera.position.x) * 0.04;
+      camera.position.y += (-mouseY + 60 - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
 
       renderer.render(scene, camera);
     }
